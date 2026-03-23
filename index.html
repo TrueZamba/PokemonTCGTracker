@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon TCG - Tracker de Matchups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .deck-card { transition: transform 0.2s; }
+        .deck-card:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-.29.02-.58.05-.86l7.1 7.1c.27.27.68.27.95 0l7.1-7.1c.03.28.05.57.05.86 0 4.41-3.59 8-8 8zm0-10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm8-2h-3.17c-.41-1.16-1.52-2-2.83-2s-2.42.84-2.83 2H3.17c-.41 1.16-1.52 2-2.83 2s-2.42-.84-2.83-2z"/></svg>
+                PokéTracker TCG
+            </h1>
+            
+            <div class="flex items-center gap-3 mt-4 md:mt-0 bg-blue-800 py-2 px-4 rounded-lg">
+                <span class="text-xl font-mono font-bold" id="timer-display">50:00</span>
+                <button onclick="startTimer()" class="bg-green-500 hover:bg-green-400 text-white px-3 py-1 rounded text-sm font-bold">▶</button>
+                <button onclick="pauseTimer()" class="bg-yellow-500 hover:bg-yellow-400 text-white px-3 py-1 rounded text-sm font-bold">⏸</button>
+                <button onclick="resetTimer()" class="bg-red-500 hover:bg-red-400 text-white px-3 py-1 rounded text-sm font-bold">⏹</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md h-fit">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2">Registrar Partida</h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">Mi Mazo</label>
+                <select id="my-deck" class="w-full border rounded p-2 bg-gray-50"></select>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2">Mazo del Rival</label>
+                <select id="opp-deck" class="w-full border rounded p-2 bg-gray-50"></select>
+            </div>
+
+            <label class="block text-sm font-bold mb-2">Resultado</label>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button onclick="addMatch('W')" class="bg-green-100 hover:bg-green-500 hover:text-white text-green-700 font-bold py-2 rounded transition-colors">Victoria</button>
+                <button onclick="addMatch('L')" class="bg-red-100 hover:bg-red-500 hover:text-white text-red-700 font-bold py-2 rounded transition-colors">Derrota</button>
+                <button onclick="addMatch('T')" class="bg-gray-200 hover:bg-gray-500 hover:text-white text-gray-700 font-bold py-2 rounded transition-colors">Empate</button>
+            </div>
+            
+            <button onclick="clearHistory()" class="w-full text-red-500 text-sm mt-4 underline">Borrar historial completo</button>
+        </div>
+
+        <div class="lg:col-span-2">
+            <div class="bg-white p-6 rounded-xl shadow-md mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Estadísticas Globales</h2>
+                    <p class="text-gray-500 text-sm">Basado en todas tus partidas registradas.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-4xl font-black text-blue-600" id="global-winrate">0%</p>
+                    <p class="text-sm font-bold text-gray-600">Porcentaje de Victorias</p>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 text-gray-700">Desglose de Matchups (Mazo Rival)</h3>
+            <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+        </div>
+    </main>
+
+    <script>
+        // Base de Datos de Mazos Meta (Limitless TCG)
+        // He usado el arte oficial de la PokeAPI como placeholder, puedes cambiar las URLs por las de Limitless.
+        const metaDecks = [
+            { id: 'zard', name: 'Charizard ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png' },
+            { id: 'garde', name: 'Gardevoir ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/282.png' },
+            { id: 'draga', name: 'Dragapult ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/887.png' },
+            { id: 'lugia', name: 'Lugia VSTAR', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/249.png' },
+            { id: 'lzb', name: 'Lost Zone Box (Comfey)', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/764.png' },
+            { id: 'cpao', name: 'Chien-Pao ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1002.png' },
+            { id: 'miraidon', name: 'Miraidon ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1008.png' }
+        ];
+
+        let matches = JSON.parse(localStorage.getItem('tcgMatches')) || [];
+
+        // Inicializar la página
+        function init() {
+            const myDeckSelect = document.getElementById('my-deck');
+            const oppDeckSelect = document.getElementById('opp-deck');
+            
+            metaDecks.forEach(deck => {
+                myDeckSelect.add(new Option(deck.name, deck.id));
+                oppDeckSelect.add(new Option(deck.name, deck.id));
+            });
+            updateUI();
+        }
+
+        // Registrar Partida
+        function addMatch(result) {
+            const myDeck = document.getElementById('my-deck').value;
+            const oppDeck = document.getElementById('opp-deck').value;
+            
+            matches.push({ myDeck, oppDeck, result, date: new Date().getTime() });
+            localStorage.setItem('tcgMatches', JSON.stringify(matches));
+            updateUI();
+        }
+
+        // Borrar Historial
+        function clearHistory() {
+            if(confirm('¿Estás seguro de borrar todas tus partidas?')) {
+                matches = [];
+                localStorage.removeItem('tcgMatches');
+                updateUI();
+            }
+        }
+
+        // Actualizar UI
+        function updateUI() {
+            // Calcular Global
+            const totalMatches = matches.length;
+            const totalWins = matches.filter(m => m.result === 'W').length;
+            const globalWinrate = totalMatches > 0 ? ((totalWins / totalMatches) * 100).toFixed(1) : 0;
+            document.getElementById('global-winrate').innerText = globalWinrate + '%';
+
+            // Calcular Desglose por mazo rival
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = '';
+
+            metaDecks.forEach(deck => {
+                const deckMatches = matches.filter(m => m.oppDeck === deck.id);
+                if (deckMatches.length === 0) return; // No mostrar si no hay partidas
+
+                const w = deckMatches.filter(m => m.result === 'W').length;
+                const l = deckMatches.filter(m => m.result === 'L').length;
+                const t = deckMatches.filter(m => m.result === 'T').length;
+                const wr = ((w / deckMatches.length) * 100).toFixed(1);
+
+                const card = document.createElement('div');
+                card.className = 'deck-card bg-white rounded-xl shadow p-4 flex items-center gap-4 border-l-4 ' + (wr >= 50 ? 'border-green-500' : 'border-red-500');
+                card.innerHTML = `
+                    <img src="${deck.img}" alt="${deck.name}" class="w-20 h-20 object-contain bg-gray-100 rounded-lg p-1">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-lg text-gray-800">${deck.name}</h4>
+                        <div class="flex justify-between text-sm mt-2">
+                            <span class="text-green-600 font-bold">${w} W</span>
+                            <span class="text-red-600 font-bold">${l} L</span>
+                            <span class="text-gray-500 font-bold">${t} T</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-2xl font-black ${wr >= 50 ? 'text-green-500' : 'text-red-500'}">${wr}%</span>
+                    </div>
+                `;
+                statsGrid.appendChild(card);
+            });
+        }
+
+        // --- LÓGICA DEL TEMPORIZADOR DE 50 MINUTOS ---
+        let timerSeconds = 50 * 60;
+        let timerInterval = null;
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const s = (timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    updateTimerDisplay();
+                } else {
+                    pauseTimer();
+                    alert("¡Tiempo cumplido! Turno 0.");
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = 50 * 60;
+            updateTimerDisplay();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
