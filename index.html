@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gardevoir ex - Pro Tracker</title>
+    <title>Gardevoir ex - Tracker & Torneos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
@@ -13,128 +13,44 @@
             background-size: 20px 20px;
             font-family: 'Nunito', sans-serif; 
         }
-        .deck-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(192, 38, 211, 0.3); }
         .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
-        
-        /* Ocultar scrollbar en historial */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Físicas de la moneda 3D con Imágenes */
-        .coin-container { perspective: 1000px; width: 120px; height: 120px; margin: 0 auto; }
-        .coin {
-            width: 100%; height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .coin-face {
-            position: absolute; width: 100%; height: 100%;
-            border-radius: 50%;
-            backface-visibility: hidden;
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            border: none;
-        }
-        .coin-front { 
-            background-image: url('TCGP_Coin_Gardevoir.png'); /* Cara = Gardevoir */
-        }
-        .coin-back { 
-            background-image: url('TCGP_Coin_Poké_Ball.png'); /* Cruz = Pokéball */
-            transform: rotateY(180deg); 
-        }
-
-        /* Animación del dado */
-        .dice-shake {
-            animation: shake 0.4s infinite cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, -2px, 0) rotate(-5deg); }
-            20%, 80% { transform: translate3d(2px, 2px, 0) rotate(5deg); }
-            30%, 50%, 70% { transform: translate3d(-4px, 4px, 0) rotate(-10deg); }
-            40%, 60% { transform: translate3d(4px, -4px, 0) rotate(10deg); }
-        }
+        .tab-active { border-bottom-color: #d946ef !important; color: #a21caf !important; }
     </style>
 </head>
-<body class="text-gray-800 pb-12 relative">
+<body class="text-gray-800 pb-12">
 
-    <div id="interactive-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border-4 border-fuchsia-300 relative">
-            <button onclick="closeModal()" class="absolute top-3 right-4 text-gray-400 hover:text-red-500 font-black text-xl">✕</button>
-            
-            <h2 id="modal-title" class="text-2xl font-black text-fuchsia-900 mb-6">Lanzando...</h2>
-            
-            <div id="modal-coin" class="hidden">
-                <div class="coin-container mb-6">
-                    <div id="coin-element" class="coin">
-                        <div class="coin-face coin-front"></div>
-                        <div class="coin-face coin-back"></div>
-                    </div>
-                </div>
-                <button onclick="animateCoin()" class="bg-fuchsia-500 hover:bg-fuchsia-400 text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors w-full">Lanzar Moneda</button>
-            </div>
-
-            <div id="modal-dice" class="hidden">
-                <div id="dice-element" class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-fuchsia-100 to-fuchsia-300 rounded-2xl flex items-center justify-center text-5xl font-black text-fuchsia-900 border-4 border-fuchsia-400 shadow-inner">
-                    ?
-                </div>
-                <button onclick="animateDice()" class="bg-fuchsia-500 hover:bg-fuchsia-400 text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors w-full">Tirar Dado</button>
-            </div>
-        </div>
-    </div>
-
-    <header class="bg-gradient-to-r from-fuchsia-700 to-fuchsia-500 text-white p-4 shadow-lg sticky top-0 z-50 border-b-4 border-fuchsia-300">
+    <header class="bg-gradient-to-r from-fuchsia-700 to-fuchsia-500 text-white p-4 shadow-lg sticky top-0 z-50">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
                 <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/282.png" alt="Gardevoir" class="w-12 h-12 drop-shadow-md">
-                <h1 class="text-2xl font-black tracking-wide">Gardevoir <span class="text-fuchsia-200 font-light">Tracker</span></h1>
+                <h1 class="text-2xl font-black tracking-wide">Gardevoir <span class="text-fuchsia-200 font-light">Pro</span></h1>
             </div>
             
-            <div class="flex flex-wrap justify-center items-center gap-2 md:gap-4">
-                <div class="flex gap-2 bg-white/20 p-1 rounded-lg backdrop-blur-sm shadow-sm">
-                    <button onclick="openModal('coin')" class="hover:bg-white/30 px-3 py-1 rounded text-sm font-bold transition-colors">🪙 Moneda</button>
-                    <button onclick="openModal('dice')" class="hover:bg-white/30 px-3 py-1 rounded text-sm font-bold transition-colors border-l border-white/30">🎲 Dado</button>
-                </div>
-
-                <div class="flex items-center gap-2 bg-fuchsia-900/50 p-2 rounded-xl border border-fuchsia-400/50 backdrop-blur-sm shadow-inner">
-                    <span class="text-xl font-mono font-bold w-16 text-center" id="timer-display">50:00</span>
-                    <button onclick="startTimer()" class="bg-green-400 hover:bg-green-300 text-green-900 px-2 py-1 rounded text-sm font-bold shadow">▶</button>
-                    <button onclick="pauseTimer()" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-2 py-1 rounded text-sm font-bold shadow">⏸</button>
-                    <button onclick="resetTimer()" class="bg-red-400 hover:bg-red-300 text-red-900 px-2 py-1 rounded text-sm font-bold shadow">⏹</button>
-                </div>
+            <div class="flex items-center gap-2 bg-fuchsia-900/50 p-2 rounded-xl border border-fuchsia-400/50 backdrop-blur-sm shadow-inner">
+                <span class="text-xl font-mono font-bold w-16 text-center" id="timer-display">50:00</span>
+                <button onclick="startTimer()" class="bg-green-400 hover:bg-green-300 text-green-900 px-2 py-1 rounded text-sm font-bold shadow">▶</button>
+                <button onclick="pauseTimer()" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-2 py-1 rounded text-sm font-bold shadow">⏸</button>
+                <button onclick="resetTimer()" class="bg-red-400 hover:bg-red-300 text-red-900 px-2 py-1 rounded text-sm font-bold shadow">⏹</button>
             </div>
+        </div>
+        
+        <div class="max-w-6xl mx-auto mt-4 flex gap-4 border-b-2 border-fuchsia-400/30">
+            <button onclick="switchTab('tracker')" id="nav-tracker" class="px-4 py-2 font-black text-fuchsia-100 border-b-4 border-transparent tab-active transition-colors">📊 Tracker Personal</button>
+            <button onclick="switchTab('tournament')" id="nav-tournament" class="px-4 py-2 font-black text-fuchsia-100 border-b-4 border-transparent hover:text-white transition-colors">🏆 Modo Torneo (Suizo)</button>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-4 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+    <main id="tab-tracker" class="max-w-6xl mx-auto p-4 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8 block">
         <div class="lg:col-span-1 flex flex-col gap-6">
-            
             <div class="glass-panel p-6 rounded-2xl shadow-xl border border-fuchsia-100">
                 <div class="bg-fuchsia-100 text-fuchsia-800 text-xs font-bold px-3 py-1 rounded-full w-fit mb-4">MI MAZO: GARDEVOIR EX</div>
                 <h2 class="text-2xl font-black mb-4 text-fuchsia-900">Nueva Partida</h2>
-                
                 <div class="mb-4">
                     <label class="block text-sm font-bold mb-1 text-gray-600">¿Contra qué jugaste?</label>
                     <select id="opp-deck" class="w-full border-2 border-fuchsia-200 rounded-xl p-2 bg-white font-bold text-fuchsia-900 focus:outline-none focus:border-fuchsia-500"></select>
                 </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-bold mb-1 text-gray-600">¿Quién empezó?</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="btn-turn-1" onclick="setTurn(1)" class="py-2 rounded-xl border-2 border-fuchsia-500 bg-fuchsia-500 text-white font-bold transition-colors shadow-sm">Fui 1º</button>
-                        <button id="btn-turn-2" onclick="setTurn(2)" class="py-2 rounded-xl border-2 border-fuchsia-200 bg-white text-fuchsia-500 font-bold transition-colors shadow-sm">Fui 2º</button>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-bold mb-1 text-gray-600">Notas (Opcional)</label>
-                    <input type="text" id="match-notes" placeholder="Ej: Prizeé 2 Kirlia..." class="w-full border-2 border-fuchsia-200 rounded-xl p-2 bg-white text-sm focus:outline-none focus:border-fuchsia-500">
-                </div>
-
                 <label class="block text-sm font-bold mb-1 text-gray-600">Resultado Final</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="addMatch('W')" class="bg-green-100 hover:bg-green-500 hover:text-white border border-green-300 text-green-700 font-black text-lg py-3 rounded-xl transition-all shadow-sm">WIN</button>
@@ -143,224 +59,110 @@
                 </div>
             </div>
 
-            <div class="glass-panel p-6 rounded-2xl shadow-xl border border-fuchsia-100 flex flex-col h-full">
-                <div class="flex justify-between items-center mb-4 border-b border-fuchsia-100 pb-2">
+            <div class="glass-panel p-6 rounded-2xl shadow-xl border border-fuchsia-100">
+                <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-black text-fuchsia-900">Historial Reciente</h2>
                     <button onclick="clearHistory()" class="text-red-400 hover:text-red-600 text-xs font-bold underline">Borrar Todo</button>
                 </div>
-                
-                <div id="recent-history" class="flex flex-col gap-3 max-h-64 overflow-y-auto no-scrollbar pr-1 flex-1">
-                    </div>
-
-                <div class="mt-4 pt-4 border-t border-fuchsia-100 flex justify-between gap-2">
-                    <button onclick="exportData()" class="text-xs bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-700 font-bold py-2 px-3 rounded flex-1 transition-colors">📥 Exportar Datos</button>
-                    <label class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-3 rounded flex-1 transition-colors text-center cursor-pointer">
-                        📤 Importar
-                        <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
-                    </label>
-                </div>
+                <div id="recent-history" class="flex flex-col gap-3 max-h-80 overflow-y-auto no-scrollbar pr-1"></div>
             </div>
-
         </div>
 
         <div class="lg:col-span-2">
-            
             <div class="glass-panel p-6 rounded-2xl shadow-xl border border-fuchsia-100 mb-8 bg-gradient-to-br from-white to-fuchsia-50">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div class="text-center md:text-left">
+                <div class="flex justify-between items-center gap-6">
+                    <div>
                         <h2 class="text-3xl font-black text-fuchsia-900">Rendimiento Total</h2>
                         <p class="text-fuchsia-600/80 font-bold mt-1" id="total-matches-text">0 partidas registradas</p>
                     </div>
-                    <div class="text-center md:text-right">
+                    <div class="text-right">
                         <p class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-600 to-purple-600" id="global-winrate">0%</p>
-                        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest mt-1">Winrate Global</p>
-                    </div>
-                </div>
-                
-                <div class="h-px bg-fuchsia-200 my-4"></div>
-                
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-white/60 p-3 rounded-xl border border-fuchsia-100">
-                        <p class="text-xs font-bold text-gray-500 uppercase">Yendo 1º</p>
-                        <p class="text-2xl font-black text-fuchsia-800" id="winrate-first">0%</p>
-                        <p class="text-xs text-gray-400" id="matches-first">0 partidas</p>
-                    </div>
-                    <div class="bg-white/60 p-3 rounded-xl border border-fuchsia-100">
-                        <p class="text-xs font-bold text-gray-500 uppercase">Yendo 2º</p>
-                        <p class="text-2xl font-black text-fuchsia-800" id="winrate-second">0%</p>
-                        <p class="text-xs text-gray-400" id="matches-second">0 partidas</p>
                     </div>
                 </div>
             </div>
+            <div id="stats-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-5"></div>
+        </div>
+    </main>
 
-            <h3 class="text-2xl font-black mb-6 text-fuchsia-900 flex items-center gap-2">
-                <svg class="w-6 h-6 text-fuchsia-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                Análisis por Matchup
-            </h3>
+    <main id="tab-tournament" class="max-w-6xl mx-auto p-4 mt-6 hidden">
+        <div class="glass-panel p-8 rounded-2xl shadow-xl border border-fuchsia-100 min-h-[60vh]">
             
-            <div id="stats-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div id="tourney-setup" class="max-w-xl mx-auto text-center py-10 block">
+                <h2 class="text-3xl font-black text-fuchsia-900 mb-4">🏆 Organizar Torneo Suizo</h2>
+                <p class="text-gray-600 mb-6 font-bold">Introduce los nombres de los jugadores separados por comas. El sistema calculará las rondas y hará los emparejamientos automáticos.</p>
+                <textarea id="player-names" rows="4" class="w-full border-2 border-fuchsia-200 rounded-xl p-4 bg-white font-bold text-gray-800 focus:outline-none focus:border-fuchsia-500 mb-4" placeholder="Ejemplo: Marcos, Laura, Pablo, Ana, Carlos"></textarea>
+                <button onclick="startTournament()" class="bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white font-black text-xl py-3 px-8 rounded-xl transition-all shadow-lg transform hover:-translate-y-1">Empezar Torneo</button>
+            </div>
+
+            <div id="tourney-active" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div class="lg:col-span-2">
+                    <div class="flex justify-between items-center mb-6 border-b-2 border-fuchsia-100 pb-4">
+                        <h2 class="text-3xl font-black text-fuchsia-900" id="round-title">Ronda 1</h2>
+                        <span class="bg-fuchsia-100 text-fuchsia-800 font-bold px-3 py-1 rounded-full text-sm" id="round-progress">Ronda 1 de 3</span>
+                    </div>
+
+                    <div id="pairings-container" class="flex flex-col gap-4 mb-6">
+                        </div>
+
+                    <div class="flex justify-between items-center mt-8">
+                        <button onclick="endTournament()" class="text-red-500 font-bold text-sm underline hover:text-red-700">Cancelar Torneo</button>
+                        <button onclick="submitRound()" class="bg-green-500 hover:bg-green-400 text-white font-black py-2 px-6 rounded-xl shadow transition-colors">Siguiente Ronda ➔</button>
+                    </div>
                 </div>
+
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl border border-gray-200 shadow-inner h-fit">
+                    <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">📊 Clasificación</h3>
+                    <div class="flex flex-col gap-2" id="standings-container">
+                        </div>
+                </div>
+
+            </div>
         </div>
     </main>
 
     <script>
+        // ==========================================
+        // LÓGICA DE NAVEGACIÓN (PESTAÑAS)
+        // ==========================================
+        function switchTab(tabId) {
+            document.getElementById('tab-tracker').classList.add('hidden');
+            document.getElementById('tab-tournament').classList.add('hidden');
+            document.getElementById('nav-tracker').classList.remove('tab-active');
+            document.getElementById('nav-tournament').classList.remove('tab-active');
+
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('nav-' + tabId).classList.add('tab-active');
+        }
+
+        // ==========================================
+        // LÓGICA DEL TRACKER (Reducida y adaptada)
+        // ==========================================
         const metaDecks = [
+            { id: 'garde', name: 'Gardevoir ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/282.png' },
             { id: 'draga', name: 'Dragapult ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/887.png' },
-            { id: 'garde', name: 'Gardevoir ex (Mirror)', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/282.png' },
-            { id: 'grimmsnarl', name: "Marnie's Grimmsnarl ex", img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/861.png' },
-            { id: 'zoroark', name: "N's Zoroark ex", img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/571.png' },
-            { id: 'gholdengo', name: 'Gholdengo ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1000.png' },
-            { id: 'froslass', name: 'Froslass Munkidori', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/478.png' },
-            { id: 'absol', name: 'Mega Absol Box', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/359.png' },
-            { id: 'crustle', name: 'Crustle / Rock Inn', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/558.png' },
             { id: 'zard', name: 'Charizard ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png' },
             { id: 'ragingbolt', name: 'Raging Bolt ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1021.png' },
-            { id: 'joltik', name: 'Joltik Box', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/595.png' },
             { id: 'other', name: 'Otro / Rogue', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/132.png' }
         ];
 
         let matches = JSON.parse(localStorage.getItem('gardeMatchesPro')) || [];
-        let currentTurn = 1; 
 
         function init() {
             const oppDeckSelect = document.getElementById('opp-deck');
-            metaDecks.forEach(deck => {
-                oppDeckSelect.add(new Option(deck.name, deck.id));
-            });
+            metaDecks.forEach(deck => { oppDeckSelect.add(new Option(deck.name, deck.id)); });
             updateUI();
-        }
-
-        // --- SISTEMA INTERACTIVO (MONEDA Y DADO) ---
-        const modal = document.getElementById('interactive-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalCoin = document.getElementById('modal-coin');
-        const modalDice = document.getElementById('modal-dice');
-        let currentRotation = 0; 
-
-        function openModal(type) {
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10); 
-
-            modalCoin.classList.add('hidden');
-            modalDice.classList.add('hidden');
-
-            if(type === 'coin') {
-                modalTitle.innerText = "Lanzar Moneda";
-                modalCoin.classList.remove('hidden');
-            } else {
-                modalTitle.innerText = "Tirar Dado";
-                modalDice.classList.remove('hidden');
-                document.getElementById('dice-element').innerText = "?";
-            }
-        }
-
-        function closeModal() {
-            modal.classList.add('opacity-0');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        function animateCoin() {
-            const coin = document.getElementById('coin-element');
-            const result = Math.floor(Math.random() * 2); // 0 = Cara, 1 = Cruz
-            
-            // Calculamos la rotación base añadiendo 5 vueltas completas (1800 grados)
-            let baseRotation = currentRotation + (5 * 360);
-            
-            // Alineamos la rotación base a un múltiplo exacto de 360 (Estado: CARA)
-            let cleanRotation = Math.ceil(baseRotation / 360) * 360;
-            
-            // Si el resultado es Cruz (1), le sumamos 180 grados exactos
-            currentRotation = result === 0 ? cleanRotation : cleanRotation + 180;
-
-            // Aplicamos la rotación física
-            coin.style.transform = `rotateY(${currentRotation}deg)`;
-            
-            modalTitle.innerText = "Girando...";
-            setTimeout(() => {
-                modalTitle.innerText = result === 0 ? "¡Es CARA!" : "¡Es CRUZ!";
-            }, 2500); // Esperamos a que acabe la transición CSS
-        }
-
-        function animateDice() {
-            const dice = document.getElementById('dice-element');
-            dice.classList.add('dice-shake');
-            modalTitle.innerText = "Rodando...";
-            
-            let interval = setInterval(() => {
-                dice.innerText = Math.floor(Math.random() * 6) + 1;
-            }, 50);
-
-            setTimeout(() => {
-                clearInterval(interval);
-                dice.classList.remove('dice-shake');
-                const finalResult = Math.floor(Math.random() * 6) + 1;
-                dice.innerText = finalResult;
-                modalTitle.innerText = `¡Ha salido un ${finalResult}!`;
-            }, 1000);
-        }
-
-        // --- SISTEMA DE BACKUP (EXPORTAR/IMPORTAR) ---
-        function exportData() {
-            if(matches.length === 0) return alert("No hay partidas para exportar.");
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(matches));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            const date = new Date().toISOString().split('T')[0];
-            dlAnchorElem.setAttribute("download", `tcg_tracker_backup_${date}.json`);
-            dlAnchorElem.click();
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedMatches = JSON.parse(e.target.result);
-                    if(Array.isArray(importedMatches)) {
-                        if(confirm(`Se han encontrado ${importedMatches.length} partidas. ¿Quieres añadirlas a tu historial actual?`)) {
-                            const combined = [...matches, ...importedMatches];
-                            const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
-                            matches = unique;
-                            localStorage.setItem('gardeMatchesPro', JSON.stringify(matches));
-                            updateUI();
-                            alert("¡Datos importados con éxito!");
-                        }
-                    }
-                } catch (error) {
-                    alert("Error al leer el archivo. Asegúrate de que es un archivo JSON válido de este tracker.");
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = ''; 
-        }
-
-        // --- GESTIÓN DE PARTIDAS ---
-        function setTurn(turn) {
-            currentTurn = turn;
-            document.getElementById('btn-turn-1').className = `py-2 rounded-xl border-2 font-bold transition-colors shadow-sm ${turn === 1 ? 'border-fuchsia-500 bg-fuchsia-500 text-white' : 'border-fuchsia-200 bg-white text-fuchsia-500'}`;
-            document.getElementById('btn-turn-2').className = `py-2 rounded-xl border-2 font-bold transition-colors shadow-sm ${turn === 2 ? 'border-fuchsia-500 bg-fuchsia-500 text-white' : 'border-fuchsia-200 bg-white text-fuchsia-500'}`;
         }
 
         function addMatch(result) {
             const oppDeck = document.getElementById('opp-deck').value;
-            const notes = document.getElementById('match-notes').value;
-            matches.push({ id: Date.now(), oppDeck, result, turn: currentTurn, notes, date: Date.now() });
+            matches.push({ id: Date.now(), oppDeck, result });
             localStorage.setItem('gardeMatchesPro', JSON.stringify(matches));
-            document.getElementById('match-notes').value = "";
             updateUI();
         }
 
-        function deleteMatch(id) {
-            if(confirm('¿Borrar esta partida del historial?')) {
-                matches = matches.filter(m => m.id !== id);
-                localStorage.setItem('gardeMatchesPro', JSON.stringify(matches));
-                updateUI();
-            }
-        }
-
         function clearHistory() {
-            if(confirm('🚨 ¿Borrar TODAS las partidas? No se puede deshacer.')) {
+            if(confirm('¿Borrar TODO el historial del Tracker?')) {
                 matches = [];
                 localStorage.removeItem('gardeMatchesPro');
                 updateUI();
@@ -369,70 +171,233 @@
 
         function updateUI() {
             const totalWins = matches.filter(m => m.result === 'W').length;
-            document.getElementById('global-winrate').innerText = matches.length > 0 ? ((totalWins / matches.length) * 100).toFixed(1) + '%' : '0%';
+            const globalWinrate = matches.length > 0 ? ((totalWins / matches.length) * 100).toFixed(1) : 0;
+            document.getElementById('global-winrate').innerText = globalWinrate + '%';
             document.getElementById('total-matches-text').innerText = `${matches.length} partidas registradas`;
 
-            [1, 2].forEach(turn => {
-                const ms = matches.filter(m => m.turn === turn);
-                const wr = ms.length > 0 ? ((ms.filter(m => m.result === 'W').length / ms.length) * 100).toFixed(1) : 0;
-                document.getElementById(`winrate-${turn === 1 ? 'first' : 'second'}`).innerText = wr + '%';
-                document.getElementById(`matches-${turn === 1 ? 'first' : 'second'}`).innerText = `${ms.length} partidas`;
+            // Historial
+            const historyContainer = document.getElementById('recent-history');
+            historyContainer.innerHTML = '';
+            matches.slice(-10).reverse().forEach(m => {
+                const dName = metaDecks.find(d => d.id === m.oppDeck)?.name || 'Otro';
+                let c = m.result === 'W' ? 'text-green-600' : (m.result === 'L' ? 'text-red-600' : 'text-gray-600');
+                historyContainer.innerHTML += `<div class="p-2 border-b text-sm font-bold flex justify-between"><span class="${c}">${m.result}</span> vs ${dName}</div>`;
             });
 
-            const hc = document.getElementById('recent-history');
-            hc.innerHTML = matches.length === 0 ? '<p class="text-sm text-gray-400 italic text-center py-4">No hay partidas.</p>' : '';
-            [...matches].reverse().slice(0, 15).forEach(m => {
-                const deckInfo = metaDecks.find(d => d.id === m.oppDeck) || { name: 'Desconocido' };
-                let rc = m.result === 'W' ? 'bg-green-100 text-green-700 border-green-300' : (m.result === 'L' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-gray-100 text-gray-700 border-gray-300');
-                hc.innerHTML += `
-                    <div class="flex items-start gap-3 bg-white p-3 rounded-xl border border-fuchsia-100 shadow-sm relative group">
-                        <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center font-black rounded-lg border ${rc}">${m.result}</div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold text-gray-800 truncate">vs ${deckInfo.name}</p>
-                            <p class="text-xs text-fuchsia-600 font-bold mb-1">Fui ${m.turn === 1 ? '1º' : '2º'}</p>
-                            ${m.notes ? `<p class="text-xs text-gray-500 italic truncate" title="${m.notes}">📝 ${m.notes}</p>` : ''}
-                        </div>
-                        <button onclick="deleteMatch(${m.id})" class="text-red-300 hover:text-red-600 p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                    </div>`;
-            });
-
-            const sg = document.getElementById('stats-grid');
-            sg.innerHTML = '';
+            // Grid
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = '';
             metaDecks.forEach(deck => {
-                const dm = matches.filter(m => m.oppDeck === deck.id);
-                if (dm.length === 0) return;
-                const w = dm.filter(m => m.result === 'W').length;
-                const wr = ((w / dm.length) * 100).toFixed(1);
-                let bc = wr >= 55 ? 'border-green-400' : (wr < 45 ? 'border-red-400' : 'border-yellow-400');
-                let tc = wr >= 55 ? 'text-green-500' : (wr < 45 ? 'text-red-500' : 'text-yellow-500');
-
-                sg.innerHTML += `
-                    <div class="deck-card glass-panel rounded-2xl shadow-md p-4 flex items-center gap-4 border-l-8 ${bc} relative overflow-hidden">
-                        <div class="absolute -right-6 -bottom-6 opacity-10 w-32 h-32 bg-contain bg-no-repeat z-0" style="background-image: url('${deck.img}')"></div>
-                        <img src="${deck.img}" class="w-20 h-20 object-contain bg-gradient-to-b from-white to-gray-100 rounded-full shadow-inner p-2 border border-gray-100 z-10 relative">
-                        <div class="flex-1 z-10 relative">
-                            <h4 class="font-black text-lg text-fuchsia-950 leading-tight">${deck.name}</h4>
-                            <div class="flex gap-2 text-sm mt-2 bg-white/70 w-fit px-2 py-1 rounded-lg">
-                                <span class="text-green-600 font-bold">${w}W</span>
-                                <span class="text-red-600 font-bold">${dm.filter(m=>m.result==='L').length}L</span>
-                                <span class="text-gray-500 font-bold">${dm.filter(m=>m.result==='T').length}T</span>
-                            </div>
-                        </div>
-                        <div class="text-right z-10 relative"><span class="block text-2xl font-black ${tc}">${wr}%</span></div>
+                const deckMatches = matches.filter(m => m.oppDeck === deck.id);
+                if (deckMatches.length === 0) return;
+                const w = deckMatches.filter(m => m.result === 'W').length;
+                const wr = ((w / deckMatches.length) * 100).toFixed(1);
+                statsGrid.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow flex items-center gap-4">
+                        <img src="${deck.img}" class="w-12 h-12">
+                        <div class="flex-1"><h4 class="font-bold">${deck.name}</h4><p class="text-sm text-gray-500">${deckMatches.length} partidas</p></div>
+                        <span class="font-black text-xl text-fuchsia-600">${wr}%</span>
                     </div>`;
             });
         }
 
-        // --- TEMPORIZADOR ---
-        let timerSeconds = 50 * 60, timerInterval = null;
-        function updateTimerDisplay() {
-            document.getElementById('timer-display').innerText = `${Math.floor(timerSeconds / 60).toString().padStart(2, '0')}:${(timerSeconds % 60).toString().padStart(2, '0')}`;
+        // ==========================================
+        // LÓGICA DEL TORNEO SUIZO
+        // ==========================================
+        let tPlayers = [];
+        let tRound = 1;
+        let tMaxRounds = 3;
+        let tPairings = []; // [{p1: obj, p2: obj}]
+
+        function startTournament() {
+            const input = document.getElementById('player-names').value;
+            const names = input.split(',').map(n => n.trim()).filter(n => n !== '');
+            
+            if(names.length < 3) {
+                alert("¡Necesitas al menos 3 jugadores para hacer un torneo!");
+                return;
+            }
+
+            // Inicializar jugadores
+            tPlayers = names.map((name, index) => ({
+                id: index,
+                name: name,
+                points: 0,
+                playedAgainst: []
+            }));
+
+            // Calcular rondas sugeridas
+            if(tPlayers.length <= 4) tMaxRounds = 2;
+            else if(tPlayers.length <= 8) tMaxRounds = 3;
+            else if(tPlayers.length <= 16) tMaxRounds = 4;
+            else tMaxRounds = 5;
+
+            tRound = 1;
+            document.getElementById('tourney-setup').classList.add('hidden');
+            document.getElementById('tourney-active').classList.remove('hidden');
+            document.getElementById('tourney-active').classList.add('grid');
+
+            generatePairings();
+            renderTournament();
         }
+
+        function endTournament() {
+            if(confirm("¿Seguro que quieres borrar este torneo?")) {
+                document.getElementById('tourney-setup').classList.remove('hidden');
+                document.getElementById('tourney-active').classList.add('hidden');
+                document.getElementById('tourney-active').classList.remove('grid');
+                tPlayers = [];
+            }
+        }
+
+        function generatePairings() {
+            // Mezclar aleatoriamente primero, luego ordenar por puntos (Swiss básico)
+            let sorted = [...tPlayers].sort(() => Math.random() - 0.5).sort((a, b) => b.points - a.points);
+            tPairings = [];
+            let pairedIds = new Set();
+
+            for (let i = 0; i < sorted.length; i++) {
+                let p1 = sorted[i];
+                if (pairedIds.has(p1.id)) continue;
+
+                let p2 = null;
+                // Buscar oponente (prioridad: no haber jugado antes)
+                for (let j = i + 1; j < sorted.length; j++) {
+                    if (!pairedIds.has(sorted[j].id) && !p1.playedAgainst.includes(sorted[j].id)) {
+                        p2 = sorted[j];
+                        break;
+                    }
+                }
+                
+                // Fallback: Si todos ya han jugado entre sí, emparejar con el siguiente disponible
+                if (!p2) {
+                    for (let j = i + 1; j < sorted.length; j++) {
+                        if (!pairedIds.has(sorted[j].id)) {
+                            p2 = sorted[j];
+                            break;
+                        }
+                    }
+                }
+
+                if (p2) {
+                    tPairings.push({ p1: p1, p2: p2 });
+                    pairedIds.add(p1.id);
+                    pairedIds.add(p2.id);
+                } else {
+                    // Impares: BYE (descanso)
+                    tPairings.push({ p1: p1, p2: null });
+                    pairedIds.add(p1.id);
+                }
+            }
+        }
+
+        function renderTournament() {
+            document.getElementById('round-title').innerText = `Ronda ${tRound}`;
+            document.getElementById('round-progress').innerText = `Ronda ${tRound} de ${tMaxRounds}`;
+
+            // Render Emparejamientos
+            const pContainer = document.getElementById('pairings-container');
+            pContainer.innerHTML = '';
+
+            tPairings.forEach((table, index) => {
+                if(table.p2 === null) {
+                    pContainer.innerHTML += `
+                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl flex justify-between items-center opacity-70">
+                            <span class="font-bold text-gray-500">Mesa ${index + 1}</span>
+                            <span class="font-black text-gray-800">${table.p1.name}</span>
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-bold">BYE (+3 Puntos)</span>
+                        </div>`;
+                } else {
+                    pContainer.innerHTML += `
+                        <div class="bg-white border-2 border-fuchsia-100 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
+                            <span class="font-bold text-fuchsia-400 text-sm hidden sm:block">Mesa ${index + 1}</span>
+                            
+                            <div class="flex-1 text-right font-black text-lg text-gray-800">${table.p1.name}</div>
+                            
+                            <select id="result-table-${index}" class="bg-gray-100 border border-gray-300 rounded-lg p-2 font-bold focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
+                                <option value="p1">Gana ${table.p1.name}</option>
+                                <option value="p2">Gana ${table.p2.name}</option>
+                                <option value="tie">Empate</option>
+                            </select>
+                            
+                            <div class="flex-1 text-left font-black text-lg text-gray-800">${table.p2.name}</div>
+                        </div>`;
+                }
+            });
+
+            // Render Clasificación
+            const sContainer = document.getElementById('standings-container');
+            sContainer.innerHTML = '';
+            let standings = [...tPlayers].sort((a, b) => b.points - a.points);
+            
+            standings.forEach((p, i) => {
+                let badge = i === 0 ? '👑' : (i < 3 ? '⭐' : '');
+                sContainer.innerHTML += `
+                    <div class="flex justify-between items-center p-2 border-b border-gray-100">
+                        <span class="font-bold text-gray-700">${i + 1}. ${p.name} ${badge}</span>
+                        <span class="bg-fuchsia-600 text-white font-black w-8 h-8 rounded flex items-center justify-center">${p.points}</span>
+                    </div>`;
+            });
+        }
+
+        function submitRound() {
+            // Recoger resultados y aplicar puntos
+            tPairings.forEach((table, index) => {
+                if(table.p2 === null) {
+                    // Bye da 3 puntos
+                    let p1 = tPlayers.find(p => p.id === table.p1.id);
+                    p1.points += 3;
+                } else {
+                    let select = document.getElementById(`result-table-${index}`).value;
+                    let p1 = tPlayers.find(p => p.id === table.p1.id);
+                    let p2 = tPlayers.find(p => p.id === table.p2.id);
+                    
+                    p1.playedAgainst.push(p2.id);
+                    p2.playedAgainst.push(p1.id);
+
+                    if (select === 'p1') { p1.points += 3; }
+                    else if (select === 'p2') { p2.points += 3; }
+                    else if (select === 'tie') { p1.points += 1; p2.points += 1; }
+                }
+            });
+
+            if (tRound >= tMaxRounds) {
+                renderTournament(); // Render final standings first
+                document.getElementById('pairings-container').innerHTML = `
+                    <div class="bg-green-100 border-2 border-green-500 p-8 rounded-xl text-center">
+                        <h2 class="text-4xl font-black text-green-700 mb-2">¡TORNEO FINALIZADO!</h2>
+                        <p class="text-green-800 font-bold">El ganador es 👑 ${[...tPlayers].sort((a, b) => b.points - a.points)[0].name}</p>
+                    </div>`;
+                // Esconder el botón de siguiente ronda
+                event.target.style.display = 'none';
+            } else {
+                tRound++;
+                generatePairings();
+                renderTournament();
+                
+                // Reiniciar Timer al pasar de ronda
+                resetTimer();
+                startTimer();
+            }
+        }
+
+        // ==========================================
+        // TEMPORIZADOR
+        // ==========================================
+        let timerSeconds = 50 * 60;
+        let timerInterval = null;
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const s = (timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+        }
+
         function startTimer() {
             if (timerInterval) return;
             timerInterval = setInterval(() => {
-                if (timerSeconds > 0) { timerSeconds--; updateTimerDisplay(); }
-                else { pauseTimer(); alert("¡TIEMPO CUMPLIDO! Inicia el Turno 0."); }
+                if (timerSeconds > 0) { timerSeconds--; updateTimerDisplay(); } 
+                else { pauseTimer(); alert("¡TIEMPO! Turno 0."); }
             }, 1000);
         }
         function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
