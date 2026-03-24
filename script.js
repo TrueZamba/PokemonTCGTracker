@@ -1,5 +1,5 @@
 // ==========================================
-// CONFIGURACIÓN (SPRITES Y MONEDAS)
+// BASE DE DATOS (SPRITES PIXELADOS)
 // ==========================================
 const metaDecks = [
     { id: 'draga', name: 'Dragapult ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/887.png' },
@@ -86,7 +86,7 @@ function updateUI() {
     document.getElementById('winrate-second').innerText = mSec.length > 0 ? ((mSec.filter(m => m.result === 'W').length / mSec.length) * 100).toFixed(1) + '%' : '0%';
     document.getElementById('matches-second').innerText = `${mSec.length} partidas`;
 
-    // --- REPARACIÓN: LOGS DE DUELOS ---
+    // Renderizado de LOGS DE DUELOS
     const hist = document.getElementById('recent-history'); 
     hist.innerHTML = '';
     if (matches.length === 0) {
@@ -108,13 +108,16 @@ function updateUI() {
         });
     }
 
+    // Renderizado del GRID (AQUÍ ESTABA EL ERROR CORREGIDO)
     const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
     metaDecks.forEach(deck => {
         const dm = matches.filter(m => m.oppDeck === deck.id);
         if (dm.length === 0) return;
         const w = dm.filter(m => m.result === 'W').length, l = dm.filter(m => m.result === 'L').length, t = dm.filter(m => m.result === 'T').length;
         const wr = ((w / dm.length) * 100).toFixed(1);
-        let col = wr >= 55 ? 'text-green-500' : (wr < 45 ? 'text-red-500' : 'text-yellow-500');
+        
+        // ¡LA VARIABLE CORREGIDA ES wrColor!
+        let wrColor = wr >= 55 ? 'text-green-500' : (wr < 45 ? 'text-red-500' : 'text-yellow-500');
         let bCol = wr >= 55 ? 'border-green-400' : (wr < 45 ? 'border-red-400' : 'border-yellow-400');
         
         grid.innerHTML += `
@@ -155,8 +158,6 @@ function flipCoin() {
     const textSub = isCara ? "(Gardevoir)" : "(Poké Ball)";
     const animClass = isCara ? 'animate-coin-heads' : 'animate-coin-tails';
 
-    // 0 grados siempre es Gardevoir. 180 grados siempre es Pokéball.
-    // La animación de CSS está arreglada para terminar en la cara correcta.
     showModal(`
         <h3 class="text-xl font-bold text-gray-500 mb-6 uppercase tracking-widest">Lanzando Moneda...</h3>
         
