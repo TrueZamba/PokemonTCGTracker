@@ -1,4 +1,6 @@
-// --- BASE DE DATOS DE MAZOS (CON SPRITES) ---
+// ==========================================
+// BASE DE DATOS DE MAZOS (SPRITES PIXELADOS)
+// ==========================================
 const metaDecks = [
     { id: 'draga', name: 'Dragapult ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/887.png' },
     { id: 'garde', name: 'Gardevoir ex (Mirror)', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/282.png' },
@@ -14,27 +16,37 @@ const metaDecks = [
     { id: 'other', name: 'Otro / Rogue', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png' }
 ];
 
-// --- RUTAS DE TUS IMÁGENES EN GITHUB (RAW) ---
+// ==========================================
+// TUS IMÁGENES DE GITHUB PARA LA MONEDA
+// ==========================================
 const URL_CARA = 'https://raw.githubusercontent.com/TrueZamba/PokemonTCGTracker/main/TCGP_Coin_Gardevoir.png';
 const URL_CRUZ = 'https://raw.githubusercontent.com/TrueZamba/PokemonTCGTracker/main/TCGP_Coin_Pok%C3%A9_Ball.png';
 
 let matches = JSON.parse(localStorage.getItem('gardeMatchesPro')) || [];
-let currentTurn = 1; // 1 = Fui 1º, 2 = Fui 2º
+let currentTurn = 1;
 
 function init() {
     const oppDeckSelect = document.getElementById('opp-deck');
-    metaDecks.forEach(deck => {
-        oppDeckSelect.add(new Option(deck.name, deck.id));
-    });
+    metaDecks.forEach(deck => { oppDeckSelect.add(new Option(deck.name, deck.id)); });
     updateUI();
 }
 
-// --- SISTEMA DE TURNOS ---
+// ==========================================
+// NAVEGACIÓN Y TRACKER
+// ==========================================
+function switchTab(tabId) {
+    document.getElementById('tab-tracker').classList.add('hidden');
+    document.getElementById('tab-tournament').classList.add('hidden');
+    document.getElementById('nav-tracker').classList.remove('tab-active');
+    document.getElementById('nav-tournament').classList.remove('tab-active');
+    
+    document.getElementById('tab-' + tabId).classList.remove('hidden');
+    document.getElementById('nav-' + tabId).classList.add('tab-active');
+}
+
 function setTurn(turn) {
     currentTurn = turn;
-    const btn1 = document.getElementById('btn-turn-1');
-    const btn2 = document.getElementById('btn-turn-2');
-    
+    const btn1 = document.getElementById('btn-turn-1'), btn2 = document.getElementById('btn-turn-2');
     if(turn === 1) {
         btn1.className = "py-2 rounded-xl border-2 border-fuchsia-500 bg-fuchsia-500 text-white font-bold transition-colors";
         btn2.className = "py-2 rounded-xl border-2 border-fuchsia-200 bg-white text-fuchsia-500 font-bold transition-colors";
@@ -44,15 +56,11 @@ function setTurn(turn) {
     }
 }
 
-// --- GESTIÓN DE PARTIDAS ---
 function addMatch(result) {
     const oppDeck = document.getElementById('opp-deck').value;
     const notes = document.getElementById('match-notes').value;
-    const id = Date.now();
-    
-    matches.push({ id, oppDeck, result, turn: currentTurn, notes, date: id });
+    matches.push({ id: Date.now(), oppDeck, result, turn: currentTurn, notes });
     localStorage.setItem('gardeMatchesPro', JSON.stringify(matches));
-    
     document.getElementById('match-notes').value = ""; 
     updateUI();
 }
@@ -67,107 +75,73 @@ function deleteMatch(id) {
 
 function clearHistory() {
     if(confirm('🚨 ¿Borrar TODAS las partidas? No se puede deshacer.')) {
-        matches = [];
-        localStorage.removeItem('gardeMatchesPro');
-        updateUI();
+        matches = []; localStorage.removeItem('gardeMatchesPro'); updateUI();
     }
 }
 
-// --- ACTUALIZACIÓN DE INTERFAZ ---
 function updateUI() {
-    const totalMatches = matches.length;
     const totalWins = matches.filter(m => m.result === 'W').length;
-    
-    const globalWinrate = totalMatches > 0 ? ((totalWins / totalMatches) * 100).toFixed(1) : 0;
-    document.getElementById('global-winrate').innerText = globalWinrate + '%';
-    document.getElementById('total-matches-text').innerText = `${totalMatches} partidas registradas`;
+    document.getElementById('global-winrate').innerText = matches.length > 0 ? ((totalWins / matches.length) * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('total-matches-text').innerText = `${matches.length} partidas registradas`;
 
-    const matchesFirst = matches.filter(m => m.turn === 1);
-    const matchesSecond = matches.filter(m => m.turn === 2);
-    
-    const wrFirst = matchesFirst.length > 0 ? ((matchesFirst.filter(m => m.result === 'W').length / matchesFirst.length) * 100).toFixed(1) : 0;
-    const wrSecond = matchesSecond.length > 0 ? ((matchesSecond.filter(m => m.result === 'W').length / matchesSecond.length) * 100).toFixed(1) : 0;
+    const mFirst = matches.filter(m => m.turn === 1), mSec = matches.filter(m => m.turn === 2);
+    document.getElementById('winrate-first').innerText = mFirst.length > 0 ? ((mFirst.filter(m => m.result === 'W').length / mFirst.length) * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('matches-first').innerText = `${mFirst.length} partidas`;
+    document.getElementById('winrate-second').innerText = mSec.length > 0 ? ((mSec.filter(m => m.result === 'W').length / mSec.length) * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('matches-second').innerText = `${mSec.length} partidas`;
 
-    document.getElementById('winrate-first').innerText = wrFirst + '%';
-    document.getElementById('matches-first').innerText = `${matchesFirst.length} partidas`;
-    document.getElementById('winrate-second').innerText = wrSecond + '%';
-    document.getElementById('matches-second').innerText = `${matchesSecond.length} partidas`;
-
-    const historyContainer = document.getElementById('recent-history');
-    historyContainer.innerHTML = '';
-    
-    if (matches.length === 0) {
-        historyContainer.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">No hay partidas recientes.</p>';
-    } else {
-        const recentMatches = [...matches].reverse().slice(0, 15);
-        recentMatches.forEach(m => {
-            const deckInfo = metaDecks.find(d => d.id === m.oppDeck) || { name: 'Desconocido' };
-            let resultColor = m.result === 'W' ? 'bg-green-100 text-green-700 border-green-300' : (m.result === 'L' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-gray-100 text-gray-700 border-gray-300');
-            let turnText = m.turn === 1 ? '1º' : '2º';
-            
-            historyContainer.innerHTML += `
+    const hist = document.getElementById('recent-history'); hist.innerHTML = '';
+    if (matches.length === 0) hist.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">No hay partidas recientes.</p>';
+    else {
+        [...matches].reverse().slice(0, 15).forEach(m => {
+            const dInfo = metaDecks.find(d => d.id === m.oppDeck) || { name: 'Desconocido' };
+            let c = m.result === 'W' ? 'bg-green-100 text-green-700 border-green-300' : (m.result === 'L' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-gray-100 text-gray-700 border-gray-300');
+            hist.innerHTML += `
                 <div class="flex items-start gap-3 bg-white p-3 rounded-xl border border-fuchsia-100 shadow-sm relative group">
-                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center font-black rounded-lg border ${resultColor}">
-                        ${m.result}
-                    </div>
+                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center font-black rounded-lg border ${c}">${m.result}</div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-gray-800 truncate">vs ${deckInfo.name}</p>
-                        <p class="text-xs text-fuchsia-600 font-bold mb-1">Fui ${turnText}</p>
+                        <p class="text-sm font-bold text-gray-800 truncate">vs ${dInfo.name}</p>
+                        <p class="text-xs text-fuchsia-600 font-bold mb-1">Fui ${m.turn === 1 ? '1º' : '2º'}</p>
                         ${m.notes ? `<p class="text-xs text-gray-500 italic truncate" title="${m.notes}">📝 ${m.notes}</p>` : ''}
                     </div>
-                    <button onclick="deleteMatch(${m.id})" class="text-red-300 hover:text-red-600 p-2 transition-colors" title="Borrar partida">
+                    <button onclick="deleteMatch(${m.id})" class="text-red-300 hover:text-red-600 p-2 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
-                </div>
-            `;
+                </div>`;
         });
     }
 
-    const statsGrid = document.getElementById('stats-grid');
-    statsGrid.innerHTML = '';
-
+    const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
     metaDecks.forEach(deck => {
-        const deckMatches = matches.filter(m => m.oppDeck === deck.id);
-        if (deckMatches.length === 0) return;
-
-        const w = deckMatches.filter(m => m.result === 'W').length;
-        const l = deckMatches.filter(m => m.result === 'L').length;
-        const t = deckMatches.filter(m => m.result === 'T').length;
-        const wr = ((w / deckMatches.length) * 100).toFixed(1);
-
-        let wrColor = 'text-gray-500';
-        let borderColor = 'border-gray-200';
-        if(wr >= 55) { wrColor = 'text-green-500'; borderColor = 'border-green-400'; }
-        else if (wr < 45) { wrColor = 'text-red-500'; borderColor = 'border-red-400'; }
-        else { wrColor = 'text-yellow-500'; borderColor = 'border-yellow-400'; }
-
-        const card = document.createElement('div');
-        card.className = `deck-card glass-panel rounded-2xl shadow-md p-4 flex items-center gap-4 border-l-8 ${borderColor} relative overflow-hidden`;
+        const dm = matches.filter(m => m.oppDeck === deck.id);
+        if (dm.length === 0) return;
+        const w = dm.filter(m => m.result === 'W').length, l = dm.filter(m => m.result === 'L').length, t = dm.filter(m => m.result === 'T').length;
+        const wr = ((w / dm.length) * 100).toFixed(1);
+        let col = wr >= 55 ? 'text-green-500' : (wr < 45 ? 'text-red-500' : 'text-yellow-500');
+        let bCol = wr >= 55 ? 'border-green-400' : (wr < 45 ? 'border-red-400' : 'border-yellow-400');
         
-        card.innerHTML = `
-            <div class="absolute -right-6 -bottom-6 opacity-10 w-32 h-32 bg-contain bg-no-repeat z-0" style="background-image: url('${deck.img}')"></div>
-            <img src="${deck.img}" alt="${deck.name}" class="w-16 h-16 object-contain bg-gradient-to-b from-white to-gray-100 rounded-xl shadow-inner border border-gray-100 z-10 relative">
-            <div class="flex-1 z-10 relative">
-                <h4 class="font-black text-lg text-fuchsia-950 leading-tight">${deck.name}</h4>
-                <div class="flex gap-2 text-sm mt-2 bg-white/70 w-fit px-2 py-1 rounded-lg">
-                    <span class="text-green-600 font-bold">${w}W</span>
-                    <span class="text-red-600 font-bold">${l}L</span>
-                    <span class="text-gray-500 font-bold">${t}T</span>
+        grid.innerHTML += `
+            <div class="deck-card glass-panel rounded-2xl shadow-md p-4 flex items-center gap-4 border-l-8 ${bCol} relative overflow-hidden">
+                <img src="${deck.img}" class="w-16 h-16 object-contain bg-gradient-to-b from-white to-gray-100 rounded-xl shadow-inner border border-gray-100 z-10 relative" style="image-rendering: pixelated;">
+                <div class="flex-1 z-10 relative">
+                    <h4 class="font-black text-lg text-fuchsia-950 leading-tight">${deck.name}</h4>
+                    <div class="flex gap-2 text-sm mt-2 bg-white/70 w-fit px-2 py-1 rounded-lg">
+                        <span class="text-green-600 font-bold">${w}W</span><span class="text-red-600 font-bold">${l}L</span><span class="text-gray-500 font-bold">${t}T</span>
+                    </div>
                 </div>
-            </div>
-            <div class="text-right z-10 relative">
-                <span class="block text-2xl font-black ${wrColor}">${wr}%</span>
-            </div>
-        `;
-        statsGrid.appendChild(card);
+                <div class="text-right z-10 relative">
+                    <span class="block text-2xl font-black ${wrColor}">${wr}%</span>
+                </div>
+            </div>`;
     });
 }
 
-// --- VENTANA MODAL (ANIMACIÓN REAL DE MONEDA Y DADO) ---
+// ==========================================
+// VENTANA MODAL (ANIMACIÓN 3D REAL MONEDA Y DADO)
+// ==========================================
 function showModal(contentHTML) {
     const modal = document.getElementById('visual-modal');
-    const content = document.getElementById('modal-content');
-    content.innerHTML = contentHTML;
+    document.getElementById('modal-content').innerHTML = contentHTML;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 }
@@ -180,42 +154,63 @@ function closeModal() {
 
 function flipCoin() {
     const isCara = Math.random() < 0.5;
-    const imgSrc = isCara ? URL_CARA : URL_CRUZ;
-    const textResult = isCara ? "¡CARA!" : "¡CRUZ!";
-    const textSub = isCara ? "(Gardevoir)" : "(Poké Ball)";
-
+    // Asignamos la animación correcta según si cae cara o cruz
+    const animClass = isCara ? 'animate-coin-heads' : 'animate-coin-tails';
+    
     showModal(`
         <h3 class="text-xl font-bold text-gray-500 mb-6 uppercase tracking-widest">Lanzando Moneda...</h3>
         
         <div class="relative w-48 h-48 mx-auto mb-6 perspective-1000">
-            <img src="${imgSrc}" class="w-full h-full object-contain animate-coin drop-shadow-2xl">
+            <div class="w-full h-full relative preserve-3d ${animClass}">
+                <div class="absolute w-full h-full backface-hidden">
+                    <img src="${URL_CARA}" class="w-full h-full object-contain drop-shadow-2xl">
+                </div>
+                <div class="absolute w-full h-full backface-hidden" style="transform: rotateY(180deg);">
+                    <img src="${URL_CRUZ}" class="w-full h-full object-contain drop-shadow-2xl">
+                </div>
+            </div>
         </div>
         
-        <div class="animate-result flex flex-col items-center w-full">
-            <h2 class="text-5xl font-black text-fuchsia-600">${textResult}</h2>
-            <p class="text-fuchsia-400 font-bold mt-2 text-lg">${textSub}</p>
+        <div class="animate-result flex flex-col items-center w-full" style="animation-delay: 1.8s;">
+            <h2 class="text-5xl font-black text-fuchsia-600">${isCara ? "¡CARA!" : "¡CRUZ!"}</h2>
+            <p class="text-fuchsia-400 font-bold mt-2 text-lg">${isCara ? "(Gardevoir)" : "(Poké Ball)"}</p>
             <button onclick="closeModal()" class="mt-6 px-8 py-3 bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-800 font-black rounded-xl transition-colors w-full border-2 border-fuchsia-300">Vale</button>
         </div>
     `);
 }
 
 function rollDice() {
-    const result = Math.floor(Math.random() * 6) + 1;
+    const finalResult = Math.floor(Math.random() * 6) + 1;
+    
     showModal(`
         <h3 class="text-xl font-bold text-gray-500 mb-6 uppercase tracking-widest">Tirando Dado...</h3>
         
         <div class="w-32 h-32 mx-auto bg-gradient-to-br from-fuchsia-500 to-purple-600 rounded-3xl flex items-center justify-center animate-dice shadow-2xl border-4 border-fuchsia-300 mb-6">
-            <span class="text-7xl font-black text-white drop-shadow-md">${result}</span>
+            <span id="dice-number" class="text-7xl font-black text-white drop-shadow-md">?</span>
         </div>
         
-        <div class="animate-result flex flex-col items-center w-full">
-            <h2 class="text-4xl font-black text-fuchsia-900">¡Salió un ${result}!</h2>
+        <div class="animate-result flex flex-col items-center w-full" style="animation-delay: 1.5s;">
+            <h2 class="text-4xl font-black text-fuchsia-900">¡Salió un ${finalResult}!</h2>
             <button onclick="closeModal()" class="mt-6 px-8 py-3 bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-800 font-black rounded-xl transition-colors w-full border-2 border-fuchsia-300">Vale</button>
         </div>
     `);
+
+    // Animación de los números del dado cambiando rápido
+    const diceEl = document.getElementById('dice-number');
+    let rolls = 0;
+    const rollInterval = setInterval(() => {
+        diceEl.innerText = Math.floor(Math.random() * 6) + 1; 
+        rolls++;
+        if (rolls >= 15) { 
+            clearInterval(rollInterval);
+            diceEl.innerText = finalResult; 
+        }
+    }, 100); 
 }
 
-// --- TEMPORIZADOR ---
+// ==========================================
+// TEMPORIZADOR
+// ==========================================
 let timerSeconds = 50 * 60;
 let timerInterval = null;
 
@@ -228,13 +223,8 @@ function updateTimerDisplay() {
 function startTimer() {
     if (timerInterval) return;
     timerInterval = setInterval(() => {
-        if (timerSeconds > 0) {
-            timerSeconds--;
-            updateTimerDisplay();
-        } else {
-            pauseTimer();
-            alert("¡TIEMPO CUMPLIDO! Inicia el Turno 0.");
-        }
+        if (timerSeconds > 0) { timerSeconds--; updateTimerDisplay(); } 
+        else { pauseTimer(); alert("¡TIEMPO CUMPLIDO! Inicia el Turno 0."); }
     }, 1000);
 }
 
@@ -249,5 +239,118 @@ function resetTimer() {
     updateTimerDisplay();
 }
 
-// Inicializar al cargar
+// ==========================================
+// LÓGICA DEL TORNEO SUIZO
+// ==========================================
+let tPlayers = [], tRound = 1, tMaxRounds = 3, tPairings = [];
+
+function startTournament() {
+    const input = document.getElementById('player-names').value;
+    const names = input.split(',').map(n => n.trim()).filter(n => n !== '');
+    if(names.length < 3) return alert("¡Necesitas al menos 3 jugadores!");
+
+    tPlayers = names.map((name, i) => ({ id: i, name: name, points: 0, playedAgainst: [] }));
+    tMaxRounds = tPlayers.length <= 4 ? 2 : (tPlayers.length <= 8 ? 3 : (tPlayers.length <= 16 ? 4 : 5));
+    tRound = 1;
+    
+    document.getElementById('tourney-setup').classList.add('hidden');
+    document.getElementById('tourney-active').classList.remove('hidden');
+    document.getElementById('tourney-active').classList.add('grid');
+    document.getElementById('btn-next-round').style.display = 'block';
+
+    generatePairings(); 
+    renderTournament();
+}
+
+function endTournament() {
+    if(confirm("¿Seguro que quieres borrar este torneo?")) {
+        document.getElementById('tourney-setup').classList.remove('hidden');
+        document.getElementById('tourney-active').classList.add('hidden');
+        document.getElementById('tourney-active').classList.remove('grid');
+        tPlayers = [];
+    }
+}
+
+function generatePairings() {
+    let sorted = [...tPlayers].sort(() => Math.random() - 0.5).sort((a, b) => b.points - a.points);
+    tPairings = []; let pairedIds = new Set();
+    
+    for (let i = 0; i < sorted.length; i++) {
+        let p1 = sorted[i]; if (pairedIds.has(p1.id)) continue;
+        let p2 = null;
+        for (let j = i + 1; j < sorted.length; j++) {
+            if (!pairedIds.has(sorted[j].id) && !p1.playedAgainst.includes(sorted[j].id)) { p2 = sorted[j]; break; }
+        }
+        if (!p2) {
+            for (let j = i + 1; j < sorted.length; j++) {
+                if (!pairedIds.has(sorted[j].id)) { p2 = sorted[j]; break; }
+            }
+        }
+
+        if (p2) { tPairings.push({ p1: p1, p2: p2 }); pairedIds.add(p1.id); pairedIds.add(p2.id); } 
+        else { tPairings.push({ p1: p1, p2: null }); pairedIds.add(p1.id); }
+    }
+}
+
+function renderTournament() {
+    document.getElementById('round-title').innerText = `Ronda ${tRound}`;
+    document.getElementById('round-progress').innerText = `Ronda ${tRound} de ${tMaxRounds}`;
+    const pContainer = document.getElementById('pairings-container'); 
+    pContainer.innerHTML = '';
+    
+    tPairings.forEach((table, index) => {
+        if(table.p2 === null) {
+            pContainer.innerHTML += `<div class="bg-gray-50 border p-4 rounded-xl flex justify-between items-center opacity-70"><span class="font-bold text-gray-500">Mesa ${index + 1}</span><span class="font-black">${table.p1.name}</span><span class="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-bold">BYE (+3 Puntos)</span></div>`;
+        } else {
+            pContainer.innerHTML += `
+                <div class="bg-white border-2 border-fuchsia-100 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
+                    <span class="font-bold text-fuchsia-400 text-sm hidden sm:block">Mesa ${index + 1}</span>
+                    <div class="flex-1 text-right font-black text-lg">${table.p1.name}</div>
+                    <select id="result-table-${index}" class="bg-gray-100 border border-gray-300 rounded-lg p-2 font-bold focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
+                        <option value="p1">Gana ${table.p1.name}</option>
+                        <option value="p2">Gana ${table.p2.name}</option>
+                        <option value="tie">Empate</option>
+                    </select>
+                    <div class="flex-1 text-left font-black text-lg">${table.p2.name}</div>
+                </div>`;
+        }
+    });
+    
+    const sContainer = document.getElementById('standings-container'); 
+    sContainer.innerHTML = '';
+    [...tPlayers].sort((a, b) => b.points - a.points).forEach((p, i) => {
+        let badge = i === 0 ? '👑' : (i < 3 ? '⭐' : '');
+        sContainer.innerHTML += `<div class="flex justify-between items-center p-2 border-b border-gray-100"><span class="font-bold text-gray-700">${i + 1}. ${p.name} ${badge}</span><span class="bg-fuchsia-600 text-white font-black w-8 h-8 rounded flex items-center justify-center">${p.points}</span></div>`;
+    });
+}
+
+function submitRound() {
+    tPairings.forEach((table, index) => {
+        if(table.p2 === null) tPlayers.find(p => p.id === table.p1.id).points += 3;
+        else {
+            let select = document.getElementById(`result-table-${index}`).value;
+            let p1 = tPlayers.find(p => p.id === table.p1.id), p2 = tPlayers.find(p => p.id === table.p2.id);
+            p1.playedAgainst.push(p2.id); p2.playedAgainst.push(p1.id);
+            if (select === 'p1') p1.points += 3; else if (select === 'p2') p2.points += 3; else if (select === 'tie') { p1.points += 1; p2.points += 1; }
+        }
+    });
+    
+    if (tRound >= tMaxRounds) {
+        renderTournament(); 
+        document.getElementById('pairings-container').innerHTML = `
+            <div class="bg-green-100 border-2 border-green-500 p-8 rounded-xl text-center">
+                <h2 class="text-4xl font-black text-green-700 mb-2">¡TORNEO FINALIZADO!</h2>
+                <p class="text-green-800 font-bold">El ganador es 👑 ${[...tPlayers].sort((a, b) => b.points - a.points)[0].name}</p>
+            </div>`;
+        document.getElementById('btn-next-round').style.display = 'none';
+    } else { 
+        tRound++; 
+        generatePairings(); 
+        renderTournament(); 
+        resetTimer(); 
+        startTimer(); 
+    }
+}
+
+// Inicializar la app
 window.onload = init;
