@@ -16,7 +16,7 @@ body {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .tab-active { border-bottom-color: #d946ef !important; color: #fdf4ff !important; background-color: rgba(192, 38, 211, 0.2); }
 
-/* --- CLASES 3D PARA LA MONEDA --- */
+/* --- CLASES 3D PERFECTAS --- */
 .perspective-1000 { 
     perspective: 1000px; 
 }
@@ -29,20 +29,12 @@ body {
     -webkit-backface-visibility: hidden; 
 }
 
-/* Animación CARA: Sube, gira y aterriza en 1800 grados (Muestra el frente) */
-@keyframes tossCoinHeads {
+/* Animación ÚNICA para la moneda: Salta y da 5 vueltas completas exactas (1800deg) */
+@keyframes coinSpinAnim {
     0% { transform: translateY(0) scale(0.5) rotateY(0deg); }
     30% { transform: translateY(-100px) scale(1.3) rotateY(720deg); }
     70% { transform: translateY(-20px) scale(1.1) rotateY(1440deg); }
     100% { transform: translateY(0) scale(1) rotateY(1800deg); }
-}
-
-/* Animación CRUZ: Sube, gira y aterriza en 1980 grados (Muestra la parte de atrás) */
-@keyframes tossCoinTails {
-    0% { transform: translateY(0) scale(0.5) rotateY(0deg); }
-    30% { transform: translateY(-100px) scale(1.3) rotateY(720deg); }
-    70% { transform: translateY(-20px) scale(1.1) rotateY(1440deg); }
-    100% { transform: translateY(0) scale(1) rotateY(1980deg); }
 }
 
 @keyframes rollDiceAnim {
@@ -57,7 +49,6 @@ body {
     100% { opacity: 1; transform: translateY(0); }
 }
 
-.animate-coin-heads { animation: tossCoinHeads 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-.animate-coin-tails { animation: tossCoinTails 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.animate-coin-spin { animation: coinSpinAnim 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
 .animate-dice { animation: rollDiceAnim 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
 .animate-result { opacity: 0; animation: fadeInResult 0.5s ease-out forwards; }
