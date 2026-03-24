@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gardevoir ex - Ultimate Tracker & Torneos</title>
+    <title>Gardevoir ex - Tracker & Torneos</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=final">
 </head>
 <body class="text-gray-800 pb-12 relative">
 
@@ -18,8 +18,8 @@
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             
             <div class="flex items-center gap-4">
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/282.png" alt="Gardevoir" class="w-20 h-20 drop-shadow-md" style="image-rendering: pixelated;">
-                <h1 class="text-3xl font-black tracking-wide">Gardevoir <span class="text-fuchsia-200 font-light">Ultimate</span></h1>
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/282.png" alt="Gardevoir" class="w-20 h-20 drop-shadow-md bg-white/20 rounded-full p-1" style="image-rendering: pixelated;">
+                <h1 class="text-3xl font-black tracking-wide">Gardevoir <span class="text-fuchsia-200 font-light">Tracker</span></h1>
             </div>
             
             <div class="flex flex-wrap justify-center items-center gap-2 md:gap-4">
@@ -80,7 +80,7 @@
                     <h2 class="text-xl font-black text-fuchsia-900">Logs de Duelos</h2>
                     <button onclick="clearHistory()" class="text-red-400 hover:text-red-600 text-sm font-bold underline">Borrar Todo</button>
                 </div>
-                <div id="recent-history" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2">
+                <div id="recent-history" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
                     </div>
             </div>
         </div>
@@ -149,6 +149,6 @@
         </div>
     </main>
 
-    <script src="script.js?v=6"></script>
+    <script src="script.js?v=final"></script>
 </body>
 </html>
