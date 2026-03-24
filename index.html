@@ -21,7 +21,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Físicas de la moneda 3D */
+        /* Físicas de la moneda 3D con Imágenes */
         .coin-container { perspective: 1000px; width: 120px; height: 120px; margin: 0 auto; }
         .coin {
             width: 100%; height: 100%;
@@ -33,13 +33,19 @@
             position: absolute; width: 100%; height: 100%;
             border-radius: 50%;
             backface-visibility: hidden;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; font-weight: 900; color: white;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2);
-            border: 6px solid #fdf4ff;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: none;
         }
-        .coin-front { background: linear-gradient(135deg, #d946ef, #c026d3); }
-        .coin-back { background: linear-gradient(135deg, #9333ea, #7e22ce); transform: rotateY(180deg); }
+        .coin-front { 
+            background-image: url('TCGP_Coin_Gardevoir.png'); /* Cara = Gardevoir */
+        }
+        .coin-back { 
+            background-image: url('TCGP_Coin_Poké_Ball.png'); /* Cruz = Pokéball */
+            transform: rotateY(180deg); 
+        }
 
         /* Animación del dado */
         .dice-shake {
@@ -64,8 +70,8 @@
             <div id="modal-coin" class="hidden">
                 <div class="coin-container mb-6">
                     <div id="coin-element" class="coin">
-                        <div class="coin-face coin-front">CARA</div>
-                        <div class="coin-face coin-back">CRUZ</div>
+                        <div class="coin-face coin-front"></div>
+                        <div class="coin-face coin-back"></div>
                     </div>
                 </div>
                 <button onclick="animateCoin()" class="bg-fuchsia-500 hover:bg-fuchsia-400 text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors w-full">Lanzar Moneda</button>
@@ -229,11 +235,11 @@
         const modalTitle = document.getElementById('modal-title');
         const modalCoin = document.getElementById('modal-coin');
         const modalDice = document.getElementById('modal-dice');
-        let currentRotation = 0; // Para mantener la moneda girando hacia adelante
+        let currentRotation = 0; 
 
         function openModal(type) {
             modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10); // Transición suave
+            setTimeout(() => modal.classList.remove('opacity-0'), 10); 
 
             modalCoin.classList.add('hidden');
             modalDice.classList.add('hidden');
@@ -253,7 +259,7 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-         function animateCoin() {
+        function animateCoin() {
             const coin = document.getElementById('coin-element');
             const result = Math.floor(Math.random() * 2); // 0 = Cara, 1 = Cruz
             
@@ -280,12 +286,10 @@
             dice.classList.add('dice-shake');
             modalTitle.innerText = "Rodando...";
             
-            // Cambiar números aleatorios rápido
             let interval = setInterval(() => {
                 dice.innerText = Math.floor(Math.random() * 6) + 1;
             }, 50);
 
-            // Detener y dar resultado
             setTimeout(() => {
                 clearInterval(interval);
                 dice.classList.remove('dice-shake');
@@ -315,7 +319,6 @@
                     const importedMatches = JSON.parse(e.target.result);
                     if(Array.isArray(importedMatches)) {
                         if(confirm(`Se han encontrado ${importedMatches.length} partidas. ¿Quieres añadirlas a tu historial actual?`)) {
-                            // Juntar y eliminar duplicados por ID
                             const combined = [...matches, ...importedMatches];
                             const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
                             matches = unique;
@@ -329,10 +332,10 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Reset input
+            event.target.value = ''; 
         }
 
-        // --- GESTIÓN DE PARTIDAS --- (El resto sigue igual, optimizado)
+        // --- GESTIÓN DE PARTIDAS ---
         function setTurn(turn) {
             currentTurn = turn;
             document.getElementById('btn-turn-1').className = `py-2 rounded-xl border-2 font-bold transition-colors shadow-sm ${turn === 1 ? 'border-fuchsia-500 bg-fuchsia-500 text-white' : 'border-fuchsia-200 bg-white text-fuchsia-500'}`;
@@ -369,7 +372,6 @@
             document.getElementById('global-winrate').innerText = matches.length > 0 ? ((totalWins / matches.length) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('total-matches-text').innerText = `${matches.length} partidas registradas`;
 
-            // Estadísticas Yendo 1º y 2º
             [1, 2].forEach(turn => {
                 const ms = matches.filter(m => m.turn === turn);
                 const wr = ms.length > 0 ? ((ms.filter(m => m.result === 'W').length / ms.length) * 100).toFixed(1) : 0;
@@ -377,7 +379,6 @@
                 document.getElementById(`matches-${turn === 1 ? 'first' : 'second'}`).innerText = `${ms.length} partidas`;
             });
 
-            // Historial
             const hc = document.getElementById('recent-history');
             hc.innerHTML = matches.length === 0 ? '<p class="text-sm text-gray-400 italic text-center py-4">No hay partidas.</p>' : '';
             [...matches].reverse().slice(0, 15).forEach(m => {
@@ -395,7 +396,6 @@
                     </div>`;
             });
 
-            // Grid Matchups
             const sg = document.getElementById('stats-grid');
             sg.innerHTML = '';
             metaDecks.forEach(deck => {
