@@ -11,14 +11,14 @@ body {
 .deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(192, 38, 211, 0.3); }
 .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
 
-/* Para que los logs tengan scroll si hay muchos pero sin barra fea */
+/* Custom scrollbar para los logs */
 .no-scrollbar::-webkit-scrollbar { width: 6px; }
 .no-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .no-scrollbar::-webkit-scrollbar-thumb { background-color: #f0abfc; border-radius: 10px; }
 
 .tab-active { border-bottom-color: #d946ef !important; color: #fdf4ff !important; background-color: rgba(192, 38, 211, 0.2); }
 
-/* --- 3D CSS PERFECTO SIN FILTROS BLUR QUE ROMPAN LA ROTACIÓN --- */
+/* --- 3D CSS SIN FILTROS PARA QUE NO FALLE --- */
 .perspective-1000 { 
     perspective: 1000px; 
 }
@@ -31,14 +31,14 @@ body {
     -webkit-backface-visibility: hidden; 
 }
 
-/* CARA = 1800 grados (5 vueltas completas, se ve la de delante) */
+/* CARA = 1800 grados (5 vueltas completas) */
 @keyframes tossCoinHeads {
     0% { transform: translateY(0) scale(0.5) rotateY(0deg); }
     50% { transform: translateY(-150px) scale(1.5) rotateY(900deg); }
     100% { transform: translateY(0) scale(1) rotateY(1800deg); }
 }
 
-/* CRUZ = 1980 grados (5 vueltas y media, se ve la de atrás) */
+/* CRUZ = 1980 grados (5 vueltas y media) */
 @keyframes tossCoinTails {
     0% { transform: translateY(0) scale(0.5) rotateY(0deg); }
     50% { transform: translateY(-150px) scale(1.5) rotateY(900deg); }
