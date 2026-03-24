@@ -154,7 +154,6 @@ function closeModal() {
 
 function flipCoin() {
     const isCara = Math.random() < 0.5;
-    // Asignamos la animación correcta según si cae cara o cruz
     const animClass = isCara ? 'animate-coin-heads' : 'animate-coin-tails';
     
     showModal(`
@@ -162,10 +161,10 @@ function flipCoin() {
         
         <div class="relative w-48 h-48 mx-auto mb-6 perspective-1000">
             <div class="w-full h-full relative preserve-3d ${animClass}">
-                <div class="absolute w-full h-full backface-hidden">
+                <div class="absolute top-0 left-0 w-full h-full backface-hidden">
                     <img src="${URL_CARA}" class="w-full h-full object-contain drop-shadow-2xl">
                 </div>
-                <div class="absolute w-full h-full backface-hidden" style="transform: rotateY(180deg);">
+                <div class="absolute top-0 left-0 w-full h-full backface-hidden" style="transform: rotateY(180deg);">
                     <img src="${URL_CRUZ}" class="w-full h-full object-contain drop-shadow-2xl">
                 </div>
             </div>
