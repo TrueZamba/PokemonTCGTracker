@@ -86,7 +86,6 @@ function updateUI() {
     document.getElementById('winrate-second').innerText = mSec.length > 0 ? ((mSec.filter(m => m.result === 'W').length / mSec.length) * 100).toFixed(1) + '%' : '0%';
     document.getElementById('matches-second').innerText = `${mSec.length} partidas`;
 
-    // Renderizado de LOGS DE DUELOS
     const hist = document.getElementById('recent-history'); 
     hist.innerHTML = '';
     if (matches.length === 0) {
@@ -108,7 +107,6 @@ function updateUI() {
         });
     }
 
-    // Renderizado del GRID (AQUÍ ESTABA EL ERROR CORREGIDO)
     const grid = document.getElementById('stats-grid'); grid.innerHTML = '';
     metaDecks.forEach(deck => {
         const dm = matches.filter(m => m.oppDeck === deck.id);
@@ -116,7 +114,6 @@ function updateUI() {
         const w = dm.filter(m => m.result === 'W').length, l = dm.filter(m => m.result === 'L').length, t = dm.filter(m => m.result === 'T').length;
         const wr = ((w / dm.length) * 100).toFixed(1);
         
-        // ¡LA VARIABLE CORREGIDA ES wrColor!
         let wrColor = wr >= 55 ? 'text-green-500' : (wr < 45 ? 'text-red-500' : 'text-yellow-500');
         let bCol = wr >= 55 ? 'border-green-400' : (wr < 45 ? 'border-red-400' : 'border-yellow-400');
         
@@ -207,24 +204,61 @@ function rollDice() {
 }
 
 // ==========================================
-// TEMPORIZADOR
+// TEMPORIZADOR ANTI-BLOQUEOS
 // ==========================================
-let timerSeconds = 50 * 60, timerInterval = null;
+let timerSeconds = 50 * 60, timerInterval = null, targetEndTime = null;
+
 function updateTimerDisplay() {
     document.getElementById('timer-display').innerText = `${Math.floor(timerSeconds / 60).toString().padStart(2, '0')}:${(timerSeconds % 60).toString().padStart(2, '0')}`;
 }
-function startTimer() {
-    if (timerInterval) return;
-    timerInterval = setInterval(() => {
-        if (timerSeconds > 0) { timerSeconds--; updateTimerDisplay(); } 
-        else { pauseTimer(); alert("¡TIEMPO CUMPLIDO! Inicia el Turno 0."); }
-    }, 1000);
+
+function checkTime() {
+    if (!targetEndTime) return;
+    const remaining = Math.round((targetEndTime - Date.now()) / 1000);
+    if (remaining <= 0) { timerSeconds = 0; updateTimerDisplay(); pauseTimer(); alert("¡TIEMPO! Turno 0."); } 
+    else { timerSeconds = remaining; updateTimerDisplay(); }
 }
-function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
-function resetTimer() { pauseTimer(); timerSeconds = 50 * 60; updateTimerDisplay(); }
+
+function startTimer() {
+    if (timerInterval) return; 
+    targetEndTime = Date.now() + (timerSeconds * 1000); 
+    localStorage.setItem('gardeTimerEnd', targetEndTime.toString());
+    timerInterval = setInterval(checkTime, 1000);
+}
+
+function pauseTimer() { 
+    clearInterval(timerInterval); 
+    timerInterval = null; 
+    targetEndTime = null; 
+    localStorage.removeItem('gardeTimerEnd'); 
+    localStorage.setItem('gardeTimerPaused', timerSeconds.toString()); 
+}
+
+function resetTimer() { 
+    pauseTimer(); 
+    timerSeconds = 50 * 60; 
+    localStorage.removeItem('gardeTimerEnd'); 
+    localStorage.removeItem('gardeTimerPaused'); 
+    updateTimerDisplay(); 
+}
+
+function initTimer() {
+    const savedEnd = localStorage.getItem('gardeTimerEnd');
+    const savedPaused = localStorage.getItem('gardeTimerPaused');
+
+    if (savedEnd) {
+        targetEndTime = parseInt(savedEnd);
+        if (Date.now() < targetEndTime) { timerInterval = setInterval(checkTime, 1000); } 
+        else { timerSeconds = 0; updateTimerDisplay(); localStorage.removeItem('gardeTimerEnd'); }
+    } else if (savedPaused) {
+        timerSeconds = parseInt(savedPaused); updateTimerDisplay();
+    } else {
+        updateTimerDisplay();
+    }
+}
 
 // ==========================================
-// LÓGICA DEL TORNEO SUIZO
+// LÓGICA DEL TORNEO SUIZO (CON OWP/RESISTENCIA)
 // ==========================================
 let tPlayers = [], tRound = 1, tMaxRounds = 3, tPairings = [];
 
@@ -233,7 +267,7 @@ function startTournament() {
     const names = input.split(',').map(n => n.trim()).filter(n => n !== '');
     if(names.length < 3) return alert("¡Necesitas al menos 3 jugadores!");
 
-    tPlayers = names.map((name, i) => ({ id: i, name: name, points: 0, playedAgainst: [] }));
+    tPlayers = names.map((name, i) => ({ id: i, name: name, points: 0, matchesPlayed: 0, playedAgainst: [], wp: 0, owp: 0 }));
     tMaxRounds = tPlayers.length <= 4 ? 2 : (tPlayers.length <= 8 ? 3 : (tPlayers.length <= 16 ? 4 : 5));
     tRound = 1;
     
@@ -254,8 +288,21 @@ function endTournament() {
     }
 }
 
+function calculateStandings() {
+    tPlayers.forEach(p => p.wp = p.matchesPlayed === 0 ? 0 : Math.max(p.points / (p.matchesPlayed * 3), 0.3333));
+    tPlayers.forEach(p => {
+        if (p.playedAgainst.length === 0) p.owp = 0;
+        else {
+            let sumWP = 0; p.playedAgainst.forEach(oppId => { let opp = tPlayers.find(o => o.id === oppId); if(opp) sumWP += opp.wp; });
+            p.owp = sumWP / p.playedAgainst.length;
+        }
+    });
+    return [...tPlayers].sort((a, b) => { if (b.points !== a.points) return b.points - a.points; return b.owp - a.owp; });
+}
+
 function generatePairings() {
-    let sorted = [...tPlayers].sort(() => Math.random() - 0.5).sort((a, b) => b.points - a.points);
+    let sorted = calculateStandings();
+    if(tRound === 1) sorted = sorted.sort(() => Math.random() - 0.5);
     tPairings = []; let pairedIds = new Set();
     
     for (let i = 0; i < sorted.length; i++) {
@@ -276,35 +323,43 @@ function renderTournament() {
     
     tPairings.forEach((table, index) => {
         if(table.p2 === null) {
-            pContainer.innerHTML += `<div class="bg-gray-50 border p-4 rounded-xl flex justify-between items-center opacity-70"><span class="font-bold text-gray-500">Mesa ${index + 1}</span><span class="font-black text-gray-800">${table.p1.name}</span><span class="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-bold">BYE (+3 Puntos)</span></div>`;
+            pContainer.innerHTML += `<div class="bg-gray-50 border p-4 rounded-xl flex justify-between items-center opacity-70"><span class="font-bold text-gray-500">Mesa ${index + 1}</span><span class="font-black text-gray-800">${table.p1.name}</span><span class="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-bold">BYE (+3 Pts)</span></div>`;
         } else {
             pContainer.innerHTML += `<div class="bg-white border-2 border-fuchsia-100 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm"><span class="font-bold text-fuchsia-400 text-sm hidden sm:block">Mesa ${index + 1}</span><div class="flex-1 text-right font-black text-lg text-gray-800">${table.p1.name}</div><select id="result-table-${index}" class="bg-gray-100 border border-gray-300 rounded-lg p-2 font-bold focus:outline-none focus:ring-2 focus:ring-fuchsia-400"><option value="p1">Gana ${table.p1.name}</option><option value="p2">Gana ${table.p2.name}</option><option value="tie">Empate</option></select><div class="flex-1 text-left font-black text-lg text-gray-800">${table.p2.name}</div></div>`;
         }
     });
     
     const sContainer = document.getElementById('standings-container'); sContainer.innerHTML = '';
-    [...tPlayers].sort((a, b) => b.points - a.points).forEach((p, i) => {
+    calculateStandings().forEach((p, i) => {
         let badge = i === 0 ? '👑' : (i < 3 ? '⭐' : '');
-        sContainer.innerHTML += `<div class="flex justify-between items-center p-2 border-b border-gray-100"><span class="font-bold text-gray-700">${i + 1}. ${p.name} ${badge}</span><span class="bg-fuchsia-600 text-white font-black w-8 h-8 rounded flex items-center justify-center">${p.points}</span></div>`;
+        let owpDisplay = p.matchesPlayed > 0 ? (p.owp * 100).toFixed(1) + '%' : '0.0%';
+        sContainer.innerHTML += `
+            <div class="flex flex-col p-2 border-b border-gray-100 hover:bg-fuchsia-50 rounded-lg">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-800">${i + 1}. ${p.name} ${badge}</span><span class="bg-fuchsia-600 text-white font-black w-8 h-8 rounded flex items-center justify-center">${p.points}</span></div>
+                <div class="text-xs text-gray-500 mt-1 font-bold">Resistencia (OWP): <span class="text-fuchsia-600">${owpDisplay}</span></div>
+            </div>`;
     });
 }
 
 function submitRound() {
     tPairings.forEach((table, index) => {
-        if(table.p2 === null) tPlayers.find(p => p.id === table.p1.id).points += 3;
-        else {
+        if(table.p2 === null) {
+            let p1 = tPlayers.find(p => p.id === table.p1.id); p1.points += 3; p1.matchesPlayed++;
+        } else {
             let select = document.getElementById(`result-table-${index}`).value;
             let p1 = tPlayers.find(p => p.id === table.p1.id), p2 = tPlayers.find(p => p.id === table.p2.id);
             p1.playedAgainst.push(p2.id); p2.playedAgainst.push(p1.id);
+            p1.matchesPlayed++; p2.matchesPlayed++;
             if (select === 'p1') p1.points += 3; else if (select === 'p2') p2.points += 3; else if (select === 'tie') { p1.points += 1; p2.points += 1; }
         }
     });
     
     if (tRound >= tMaxRounds) {
         renderTournament(); 
-        document.getElementById('pairings-container').innerHTML = `<div class="bg-green-100 border-2 border-green-500 p-8 rounded-xl text-center"><h2 class="text-4xl font-black text-green-700 mb-2">¡TORNEO FINALIZADO!</h2><p class="text-green-800 font-bold">El ganador es 👑 ${[...tPlayers].sort((a, b) => b.points - a.points)[0].name}</p></div>`;
+        let fs = calculateStandings();
+        document.getElementById('pairings-container').innerHTML = `<div class="bg-green-100 border-2 border-green-500 p-8 rounded-xl text-center"><h2 class="text-4xl font-black text-green-700 mb-2">¡TORNEO FINALIZADO!</h2><p class="text-green-800 font-bold text-lg">El ganador es 👑 <span class="font-black text-2xl">${fs[0].name}</span></p><p class="text-green-600 font-bold text-sm mt-2">Con ${fs[0].points} puntos y ${ (fs[0].owp * 100).toFixed(1) }% Resistencia.</p></div>`;
         document.getElementById('btn-next-round').style.display = 'none';
     } else { tRound++; generatePairings(); renderTournament(); resetTimer(); startTimer(); }
 }
 
-window.onload = init;
+window.onload = () => { init(); initTimer(); };
