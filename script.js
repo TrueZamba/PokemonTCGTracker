@@ -86,23 +86,24 @@ function updateUI() {
     document.getElementById('winrate-second').innerText = mSec.length > 0 ? ((mSec.filter(m => m.result === 'W').length / mSec.length) * 100).toFixed(1) + '%' : '0%';
     document.getElementById('matches-second').innerText = `${mSec.length} partidas`;
 
-    const hist = document.getElementById('recent-history'); hist.innerHTML = '';
-    if (matches.length === 0) hist.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">No hay partidas recientes.</p>';
-    else {
-        [...matches].reverse().slice(0, 15).forEach(m => {
+    // --- REPARACIÓN: LOGS DE DUELOS ---
+    const hist = document.getElementById('recent-history'); 
+    hist.innerHTML = '';
+    if (matches.length === 0) {
+        hist.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">No hay partidas recientes.</p>';
+    } else {
+        [...matches].reverse().forEach(m => {
             const dInfo = metaDecks.find(d => d.id === m.oppDeck) || { name: 'Desconocido' };
             let c = m.result === 'W' ? 'bg-green-100 text-green-700 border-green-300' : (m.result === 'L' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-gray-100 text-gray-700 border-gray-300');
             hist.innerHTML += `
-                <div class="flex items-start gap-3 bg-white p-3 rounded-xl border border-fuchsia-100 shadow-sm relative group">
-                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center font-black rounded-lg border ${c}">${m.result}</div>
+                <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-fuchsia-100 shadow-sm relative group mb-2">
+                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center font-black rounded-lg border-2 ${c}">${m.result}</div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold text-gray-800 truncate">vs ${dInfo.name}</p>
                         <p class="text-xs text-fuchsia-600 font-bold mb-1">Fui ${m.turn === 1 ? '1º' : '2º'}</p>
                         ${m.notes ? `<p class="text-xs text-gray-500 italic truncate" title="${m.notes}">📝 ${m.notes}</p>` : ''}
                     </div>
-                    <button onclick="deleteMatch(${m.id})" class="text-red-300 hover:text-red-600 p-2 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
+                    <button onclick="deleteMatch(${m.id})" class="text-red-300 hover:text-red-600 p-2 transition-colors">❌</button>
                 </div>`;
         });
     }
@@ -118,7 +119,7 @@ function updateUI() {
         
         grid.innerHTML += `
             <div class="deck-card glass-panel rounded-2xl shadow-md p-4 flex items-center gap-4 border-l-8 ${bCol} relative overflow-hidden">
-                <img src="${deck.img}" class="w-16 h-16 object-contain z-10" style="image-rendering: pixelated;">
+                <img src="${deck.img}" class="w-16 h-16 object-contain bg-gradient-to-b from-white to-gray-100 rounded-xl shadow-inner border border-gray-100 z-10 relative" style="image-rendering: pixelated;">
                 <div class="flex-1 z-10 relative">
                     <h4 class="font-black text-lg text-fuchsia-950 leading-tight">${deck.name}</h4>
                     <div class="flex gap-2 text-sm mt-2 bg-white/70 w-fit px-2 py-1 rounded-lg">
@@ -150,25 +151,29 @@ function closeModal() {
 
 function flipCoin() {
     const isCara = Math.random() < 0.5;
+    const textResult = isCara ? "¡CARA!" : "¡CRUZ!";
+    const textSub = isCara ? "(Gardevoir)" : "(Poké Ball)";
     const animClass = isCara ? 'animate-coin-heads' : 'animate-coin-tails';
-    
+
+    // 0 grados siempre es Gardevoir. 180 grados siempre es Pokéball.
+    // La animación de CSS está arreglada para terminar en la cara correcta.
     showModal(`
         <h3 class="text-xl font-bold text-gray-500 mb-6 uppercase tracking-widest">Lanzando Moneda...</h3>
         
         <div class="relative w-48 h-48 mx-auto mb-6 perspective-1000">
             <div class="w-full h-full relative preserve-3d ${animClass}">
                 <div class="absolute top-0 left-0 w-full h-full backface-hidden">
-                    <img src="${URL_CARA}" class="w-full h-full object-contain">
+                    <img src="${URL_CARA}" class="w-full h-full object-contain drop-shadow-lg">
                 </div>
                 <div class="absolute top-0 left-0 w-full h-full backface-hidden" style="transform: rotateY(180deg);">
-                    <img src="${URL_CRUZ}" class="w-full h-full object-contain">
+                    <img src="${URL_CRUZ}" class="w-full h-full object-contain drop-shadow-lg">
                 </div>
             </div>
         </div>
         
-        <div class="animate-result flex flex-col items-center w-full" style="animation-delay: 1.8s;">
-            <h2 class="text-5xl font-black text-fuchsia-600">${isCara ? "¡CARA!" : "¡CRUZ!"}</h2>
-            <p class="text-fuchsia-400 font-bold mt-2 text-lg">${isCara ? "(Gardevoir)" : "(Poké Ball)"}</p>
+        <div class="animate-result flex flex-col items-center w-full" style="animation-delay: 2s;">
+            <h2 class="text-5xl font-black text-fuchsia-600">${textResult}</h2>
+            <p class="text-fuchsia-400 font-bold mt-2 text-lg">${textSub}</p>
             <button onclick="closeModal()" class="mt-6 px-8 py-3 bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-800 font-black rounded-xl transition-colors w-full border-2 border-fuchsia-300">Vale</button>
         </div>
     `);
@@ -176,6 +181,7 @@ function flipCoin() {
 
 function rollDice() {
     const finalResult = Math.floor(Math.random() * 6) + 1;
+    
     showModal(`
         <h3 class="text-xl font-bold text-gray-500 mb-6 uppercase tracking-widest">Tirando Dado...</h3>
         <div class="w-32 h-32 mx-auto bg-gradient-to-br from-fuchsia-500 to-purple-600 rounded-3xl flex items-center justify-center animate-dice shadow-2xl border-4 border-fuchsia-300 mb-6">
@@ -187,13 +193,16 @@ function rollDice() {
         </div>
     `);
 
-    const diceEl = document.getElementById('dice-number');
-    let rolls = 0;
-    const rollInterval = setInterval(() => {
-        diceEl.innerText = Math.floor(Math.random() * 6) + 1; 
-        rolls++;
-        if (rolls >= 15) { clearInterval(rollInterval); diceEl.innerText = finalResult; }
-    }, 100); 
+    setTimeout(() => {
+        const diceEl = document.getElementById('dice-number');
+        if(!diceEl) return;
+        let rolls = 0;
+        const rollInterval = setInterval(() => {
+            diceEl.innerText = Math.floor(Math.random() * 6) + 1; 
+            rolls++;
+            if (rolls >= 15) { clearInterval(rollInterval); diceEl.innerText = finalResult; }
+        }, 80); 
+    }, 50);
 }
 
 // ==========================================
