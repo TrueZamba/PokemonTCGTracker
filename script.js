@@ -1,5 +1,5 @@
 // ==========================================
-// BASE DE DATOS DE MAZOS (SPRITES PIXELADOS)
+// CONFIGURACIÓN (SPRITES Y MONEDAS)
 // ==========================================
 const metaDecks = [
     { id: 'draga', name: 'Dragapult ex', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/887.png' },
@@ -16,14 +16,11 @@ const metaDecks = [
     { id: 'other', name: 'Otro / Rogue', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png' }
 ];
 
-// ==========================================
-// TUS IMÁGENES DE GITHUB PARA LA MONEDA
-// ==========================================
 const URL_CARA = 'https://raw.githubusercontent.com/TrueZamba/PokemonTCGTracker/main/TCGP_Coin_Gardevoir.png';
 const URL_CRUZ = 'https://raw.githubusercontent.com/TrueZamba/PokemonTCGTracker/main/TCGP_Coin_Pok%C3%A9_Ball.png';
 
 let matches = JSON.parse(localStorage.getItem('gardeMatchesPro')) || [];
-let currentTurn = 1;
+let currentTurn = 1; 
 
 function init() {
     const oppDeckSelect = document.getElementById('opp-deck');
@@ -39,7 +36,6 @@ function switchTab(tabId) {
     document.getElementById('tab-tournament').classList.add('hidden');
     document.getElementById('nav-tracker').classList.remove('tab-active');
     document.getElementById('nav-tournament').classList.remove('tab-active');
-    
     document.getElementById('tab-' + tabId).classList.remove('hidden');
     document.getElementById('nav-' + tabId).classList.add('tab-active');
 }
@@ -122,7 +118,7 @@ function updateUI() {
         
         grid.innerHTML += `
             <div class="deck-card glass-panel rounded-2xl shadow-md p-4 flex items-center gap-4 border-l-8 ${bCol} relative overflow-hidden">
-                <img src="${deck.img}" class="w-16 h-16 object-contain bg-gradient-to-b from-white to-gray-100 rounded-xl shadow-inner border border-gray-100 z-10 relative" style="image-rendering: pixelated;">
+                <img src="${deck.img}" class="w-16 h-16 object-contain z-10" style="image-rendering: pixelated;">
                 <div class="flex-1 z-10 relative">
                     <h4 class="font-black text-lg text-fuchsia-950 leading-tight">${deck.name}</h4>
                     <div class="flex gap-2 text-sm mt-2 bg-white/70 w-fit px-2 py-1 rounded-lg">
@@ -137,7 +133,7 @@ function updateUI() {
 }
 
 // ==========================================
-// VENTANA MODAL (ANIMACIÓN 3D REAL MONEDA Y DADO)
+// MODAL: DADO Y MONEDA 3D
 // ==========================================
 function showModal(contentHTML) {
     const modal = document.getElementById('visual-modal');
@@ -162,10 +158,10 @@ function flipCoin() {
         <div class="relative w-48 h-48 mx-auto mb-6 perspective-1000">
             <div class="w-full h-full relative preserve-3d ${animClass}">
                 <div class="absolute top-0 left-0 w-full h-full backface-hidden">
-                    <img src="${URL_CARA}" class="w-full h-full object-contain drop-shadow-2xl">
+                    <img src="${URL_CARA}" class="w-full h-full object-contain">
                 </div>
                 <div class="absolute top-0 left-0 w-full h-full backface-hidden" style="transform: rotateY(180deg);">
-                    <img src="${URL_CRUZ}" class="w-full h-full object-contain drop-shadow-2xl">
+                    <img src="${URL_CRUZ}" class="w-full h-full object-contain">
                 </div>
             </div>
         </div>
@@ -180,45 +176,33 @@ function flipCoin() {
 
 function rollDice() {
     const finalResult = Math.floor(Math.random() * 6) + 1;
-    
     showModal(`
         <h3 class="text-xl font-bold text-gray-500 mb-6 uppercase tracking-widest">Tirando Dado...</h3>
-        
         <div class="w-32 h-32 mx-auto bg-gradient-to-br from-fuchsia-500 to-purple-600 rounded-3xl flex items-center justify-center animate-dice shadow-2xl border-4 border-fuchsia-300 mb-6">
             <span id="dice-number" class="text-7xl font-black text-white drop-shadow-md">?</span>
         </div>
-        
         <div class="animate-result flex flex-col items-center w-full" style="animation-delay: 1.5s;">
-            <h2 class="text-4xl font-black text-fuchsia-900">¡Salió un ${finalResult}!</h2>
+            <h2 class="text-4xl font-black text-fuchsia-900" id="final-dice-text">¡Salió un ${finalResult}!</h2>
             <button onclick="closeModal()" class="mt-6 px-8 py-3 bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-800 font-black rounded-xl transition-colors w-full border-2 border-fuchsia-300">Vale</button>
         </div>
     `);
 
-    // Animación de los números del dado cambiando rápido
     const diceEl = document.getElementById('dice-number');
     let rolls = 0;
     const rollInterval = setInterval(() => {
         diceEl.innerText = Math.floor(Math.random() * 6) + 1; 
         rolls++;
-        if (rolls >= 15) { 
-            clearInterval(rollInterval);
-            diceEl.innerText = finalResult; 
-        }
+        if (rolls >= 15) { clearInterval(rollInterval); diceEl.innerText = finalResult; }
     }, 100); 
 }
 
 // ==========================================
 // TEMPORIZADOR
 // ==========================================
-let timerSeconds = 50 * 60;
-let timerInterval = null;
-
+let timerSeconds = 50 * 60, timerInterval = null;
 function updateTimerDisplay() {
-    const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-    const s = (timerSeconds % 60).toString().padStart(2, '0');
-    document.getElementById('timer-display').innerText = `${m}:${s}`;
+    document.getElementById('timer-display').innerText = `${Math.floor(timerSeconds / 60).toString().padStart(2, '0')}:${(timerSeconds % 60).toString().padStart(2, '0')}`;
 }
-
 function startTimer() {
     if (timerInterval) return;
     timerInterval = setInterval(() => {
@@ -226,17 +210,8 @@ function startTimer() {
         else { pauseTimer(); alert("¡TIEMPO CUMPLIDO! Inicia el Turno 0."); }
     }, 1000);
 }
-
-function pauseTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null;
-}
-
-function resetTimer() {
-    pauseTimer();
-    timerSeconds = 50 * 60;
-    updateTimerDisplay();
-}
+function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
+function resetTimer() { pauseTimer(); timerSeconds = 50 * 60; updateTimerDisplay(); }
 
 // ==========================================
 // LÓGICA DEL TORNEO SUIZO
@@ -257,12 +232,11 @@ function startTournament() {
     document.getElementById('tourney-active').classList.add('grid');
     document.getElementById('btn-next-round').style.display = 'block';
 
-    generatePairings(); 
-    renderTournament();
+    generatePairings(); renderTournament();
 }
 
 function endTournament() {
-    if(confirm("¿Seguro que quieres borrar este torneo?")) {
+    if(confirm("¿Seguro que quieres cancelar este torneo?")) {
         document.getElementById('tourney-setup').classList.remove('hidden');
         document.getElementById('tourney-active').classList.add('hidden');
         document.getElementById('tourney-active').classList.remove('grid');
@@ -277,14 +251,8 @@ function generatePairings() {
     for (let i = 0; i < sorted.length; i++) {
         let p1 = sorted[i]; if (pairedIds.has(p1.id)) continue;
         let p2 = null;
-        for (let j = i + 1; j < sorted.length; j++) {
-            if (!pairedIds.has(sorted[j].id) && !p1.playedAgainst.includes(sorted[j].id)) { p2 = sorted[j]; break; }
-        }
-        if (!p2) {
-            for (let j = i + 1; j < sorted.length; j++) {
-                if (!pairedIds.has(sorted[j].id)) { p2 = sorted[j]; break; }
-            }
-        }
+        for (let j = i + 1; j < sorted.length; j++) if (!pairedIds.has(sorted[j].id) && !p1.playedAgainst.includes(sorted[j].id)) { p2 = sorted[j]; break; }
+        if (!p2) for (let j = i + 1; j < sorted.length; j++) if (!pairedIds.has(sorted[j].id)) { p2 = sorted[j]; break; }
 
         if (p2) { tPairings.push({ p1: p1, p2: p2 }); pairedIds.add(p1.id); pairedIds.add(p2.id); } 
         else { tPairings.push({ p1: p1, p2: null }); pairedIds.add(p1.id); }
@@ -294,29 +262,17 @@ function generatePairings() {
 function renderTournament() {
     document.getElementById('round-title').innerText = `Ronda ${tRound}`;
     document.getElementById('round-progress').innerText = `Ronda ${tRound} de ${tMaxRounds}`;
-    const pContainer = document.getElementById('pairings-container'); 
-    pContainer.innerHTML = '';
+    const pContainer = document.getElementById('pairings-container'); pContainer.innerHTML = '';
     
     tPairings.forEach((table, index) => {
         if(table.p2 === null) {
-            pContainer.innerHTML += `<div class="bg-gray-50 border p-4 rounded-xl flex justify-between items-center opacity-70"><span class="font-bold text-gray-500">Mesa ${index + 1}</span><span class="font-black">${table.p1.name}</span><span class="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-bold">BYE (+3 Puntos)</span></div>`;
+            pContainer.innerHTML += `<div class="bg-gray-50 border p-4 rounded-xl flex justify-between items-center opacity-70"><span class="font-bold text-gray-500">Mesa ${index + 1}</span><span class="font-black text-gray-800">${table.p1.name}</span><span class="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-bold">BYE (+3 Puntos)</span></div>`;
         } else {
-            pContainer.innerHTML += `
-                <div class="bg-white border-2 border-fuchsia-100 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
-                    <span class="font-bold text-fuchsia-400 text-sm hidden sm:block">Mesa ${index + 1}</span>
-                    <div class="flex-1 text-right font-black text-lg">${table.p1.name}</div>
-                    <select id="result-table-${index}" class="bg-gray-100 border border-gray-300 rounded-lg p-2 font-bold focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
-                        <option value="p1">Gana ${table.p1.name}</option>
-                        <option value="p2">Gana ${table.p2.name}</option>
-                        <option value="tie">Empate</option>
-                    </select>
-                    <div class="flex-1 text-left font-black text-lg">${table.p2.name}</div>
-                </div>`;
+            pContainer.innerHTML += `<div class="bg-white border-2 border-fuchsia-100 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm"><span class="font-bold text-fuchsia-400 text-sm hidden sm:block">Mesa ${index + 1}</span><div class="flex-1 text-right font-black text-lg text-gray-800">${table.p1.name}</div><select id="result-table-${index}" class="bg-gray-100 border border-gray-300 rounded-lg p-2 font-bold focus:outline-none focus:ring-2 focus:ring-fuchsia-400"><option value="p1">Gana ${table.p1.name}</option><option value="p2">Gana ${table.p2.name}</option><option value="tie">Empate</option></select><div class="flex-1 text-left font-black text-lg text-gray-800">${table.p2.name}</div></div>`;
         }
     });
     
-    const sContainer = document.getElementById('standings-container'); 
-    sContainer.innerHTML = '';
+    const sContainer = document.getElementById('standings-container'); sContainer.innerHTML = '';
     [...tPlayers].sort((a, b) => b.points - a.points).forEach((p, i) => {
         let badge = i === 0 ? '👑' : (i < 3 ? '⭐' : '');
         sContainer.innerHTML += `<div class="flex justify-between items-center p-2 border-b border-gray-100"><span class="font-bold text-gray-700">${i + 1}. ${p.name} ${badge}</span><span class="bg-fuchsia-600 text-white font-black w-8 h-8 rounded flex items-center justify-center">${p.points}</span></div>`;
@@ -336,20 +292,9 @@ function submitRound() {
     
     if (tRound >= tMaxRounds) {
         renderTournament(); 
-        document.getElementById('pairings-container').innerHTML = `
-            <div class="bg-green-100 border-2 border-green-500 p-8 rounded-xl text-center">
-                <h2 class="text-4xl font-black text-green-700 mb-2">¡TORNEO FINALIZADO!</h2>
-                <p class="text-green-800 font-bold">El ganador es 👑 ${[...tPlayers].sort((a, b) => b.points - a.points)[0].name}</p>
-            </div>`;
+        document.getElementById('pairings-container').innerHTML = `<div class="bg-green-100 border-2 border-green-500 p-8 rounded-xl text-center"><h2 class="text-4xl font-black text-green-700 mb-2">¡TORNEO FINALIZADO!</h2><p class="text-green-800 font-bold">El ganador es 👑 ${[...tPlayers].sort((a, b) => b.points - a.points)[0].name}</p></div>`;
         document.getElementById('btn-next-round').style.display = 'none';
-    } else { 
-        tRound++; 
-        generatePairings(); 
-        renderTournament(); 
-        resetTimer(); 
-        startTimer(); 
-    }
+    } else { tRound++; generatePairings(); renderTournament(); resetTimer(); startTimer(); }
 }
 
-// Inicializar la app
 window.onload = init;
