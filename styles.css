@@ -17,9 +17,17 @@ body {
 .tab-active { border-bottom-color: #d946ef !important; color: #fdf4ff !important; background-color: rgba(192, 38, 211, 0.2); }
 
 /* --- CLASES 3D PARA LA MONEDA --- */
-.perspective-1000 { perspective: 1000px; }
-.preserve-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; }
+.perspective-1000 { 
+    perspective: 1000px; 
+}
+.preserve-3d { 
+    transform-style: preserve-3d; 
+    -webkit-transform-style: preserve-3d;
+}
+.backface-hidden { 
+    backface-visibility: hidden; 
+    -webkit-backface-visibility: hidden; 
+}
 
 /* Animación cuando sale CARA (Termina en 0 grados = 1800deg, es decir, 5 vueltas completas) */
 @keyframes tossCoinHeads {
