@@ -253,26 +253,26 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        function animateCoin() {
+         function animateCoin() {
             const coin = document.getElementById('coin-element');
-            // Resultado: 0 (Cara) o 1 (Cruz)
-            const result = Math.floor(Math.random() * 2); 
+            const result = Math.floor(Math.random() * 2); // 0 = Cara, 1 = Cruz
             
-            // Añadimos 5 vueltas completas (1800 grados) + el resultado
-            const spins = 5 * 360;
-            const extra = result === 1 ? 180 : 0;
+            // Calculamos la rotación base añadiendo 5 vueltas completas (1800 grados)
+            let baseRotation = currentRotation + (5 * 360);
             
-            currentRotation += spins + extra;
-            // Aseguramos que si sale cruz seguida de cruz, siga girando añadiendo grados
-            if (currentRotation % 360 === 180 && result === 1) currentRotation += 360; 
-            if (currentRotation % 360 === 0 && result === 0) currentRotation += 360;
+            // Alineamos la rotación base a un múltiplo exacto de 360 (Estado: CARA)
+            let cleanRotation = Math.ceil(baseRotation / 360) * 360;
+            
+            // Si el resultado es Cruz (1), le sumamos 180 grados exactos
+            currentRotation = result === 0 ? cleanRotation : cleanRotation + 180;
 
+            // Aplicamos la rotación física
             coin.style.transform = `rotateY(${currentRotation}deg)`;
             
             modalTitle.innerText = "Girando...";
             setTimeout(() => {
                 modalTitle.innerText = result === 0 ? "¡Es CARA!" : "¡Es CRUZ!";
-            }, 2500); // Esperar a que acabe la transición CSS
+            }, 2500); // Esperamos a que acabe la transición CSS
         }
 
         function animateDice() {
